@@ -3,40 +3,40 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
-    // --- Links to other models ---
     trip_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Trip",
       required: true,
     },
-    // user_id is now always required since all bookings are online.
+    // user_id is NOT required for offline bookings made by a conductor
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+
+    // --- FIELD TO TRACK THE CHANNEL ---
+    booking_channel: {
+      type: String,
+      enum: ["ONLINE", "OFFLINE"],
       required: true,
     },
 
-    // --- Booking Details ---
     seat_numbers: {
       type: [String],
       required: true,
     },
-
     total_fare: {
       type: Number,
       required: true,
     },
-
-    // --- Status & Payment Details ---
     status: {
       type: String,
-      enum: ["CONFIRMED", "CANCELLED_BY_USER", "CANCELLED_BY_ADMIN"],
+      enum: ["CONFIRMED", "CANCELLED"],
       default: "CONFIRMED",
     },
-
+    // payment_id is NOT required for offline cash sales
     payment_id: {
       type: String,
-      required: true, // Now required as all bookings are prepaid online
     },
   },
   {

@@ -1,7 +1,6 @@
 // models/trip.model.js
 import mongoose from "mongoose";
 
-// A sub-schema to record the actual time a bus reaches/leaves a stop during a live trip.
 const visitedStopSchema = new mongoose.Schema({
   stop_name: { type: String },
   actual_arrival_time: { type: Date },
@@ -10,35 +9,27 @@ const visitedStopSchema = new mongoose.Schema({
 
 const tripSchema = new mongoose.Schema(
   {
-    // --- Links to other "blueprint" models ---
+    // --- Links to other models (remain the same) ---
     route_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Route", // Link to the Route model
+      ref: "Route",
       required: true,
     },
     vehicle_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Vehicle", // Link to the specific bus being used
+      ref: "Vehicle",
       required: true,
     },
     driver_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Staff", // Link to the assigned driver
+      ref: "Staff",
       required: true,
     },
-    conductor_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Staff", // Link to the assigned conductor
-    },
+    conductor_id: { type: mongoose.Schema.Types.ObjectId, ref: "Staff" },
 
-    // --- Trip Schedule & Status ---
-    departure_datetime: {
-      type: Date,
-      required: true, // The scheduled start time for this specific trip
-    },
-    arrival_datetime: {
-      type: Date, // The scheduled end time, calculated from departure + route duration
-    },
+    // --- Trip Schedule & Status (remain the same) ---
+    departure_datetime: { type: Date, required: true },
+    arrival_datetime: { type: Date },
     status: {
       type: String,
       required: true,
@@ -46,19 +37,22 @@ const tripSchema = new mongoose.Schema(
       default: "SCHEDULED",
     },
 
-    // --- Real-Time & Dynamic Data ---
+    // --- NEW FIELDS FOR SEAT MANAGEMENT ---
+    seat_allocation: {
+      online: { type: Number, required: true },
+      offline: { type: Number, required: true },
+    },
+    tickets_booked: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+    },
+
+    // --- Real-Time Data (remain the same) ---
     live_location: {
       latitude: { type: Number },
       longitude: { type: Number },
     },
-    last_location_update: {
-      type: Date, // Crucial for your automated alert system
-    },
-    current_passenger_count: {
-      type: Number, // Updated from bookings, for the Municipal dashboard
-      default: 0,
-    },
-    // This array gets populated as the bus visits each stop.
+    last_location_update: { type: Date },
     visited_stops: [visitedStopSchema],
   },
   {
