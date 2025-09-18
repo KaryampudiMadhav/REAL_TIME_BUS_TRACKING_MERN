@@ -23,8 +23,6 @@ const vehicleSchema = new mongoose.Schema(
         "Ultra Deluxe",
         "Super Luxury",
         "Indra AC",
-        "Garuda Volvo",
-        "Vennela Sleeper",
       ],
     },
     total_seats: {

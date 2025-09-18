@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
         "Please fill a valid email address",
       ],
     },
+    age: {
+      type: Number,
+      min: [0, "Age cannot be negative"],
+      max: [120, "Age seems unrealistic"],
+    },
     password: {
       type: String,
       required: [true, "Password is required"],
@@ -29,11 +34,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Contact number is required"],
     },
-    aadhaar_number: {
-      type: String,
-      unique: true,
-      match: [/^\d{12}$/, "Aadhaar number must be exactly 12 digits."],
-    },
+    // aadhaar_number: {
+    //   type: String,
+    //   unique: true,
+    //   match: [/^\d{12}$/, "Aadhaar number must be exactly 12 digits."],
+    // },
     // --- Authorization & Status ---
     role: {
       type: String,
@@ -53,16 +58,24 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
-    // --- Password Reset (Token would be stored here) ---
-    password_reset_token: String,
-    password_reset_expires: Date,
-
     // --- Summary Data (updated by server logic for performance) ---
     total_journeys: {
       type: Number,
       default: 0,
     },
+    isVerified: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    lastLogin: {
+      type: Date,
+      default: Date.now(),
+    },
+    password_reset_token: String,
+    password_reset_expires: Date,
+    verificationToken: String,
+    verificationTokenExpiresAt: Date,
   },
   {
     // Automatically adds createdAt and updatedAt fields

@@ -9,6 +9,7 @@ const bookingSchema = new mongoose.Schema(
       ref: "Trip",
       required: true,
     },
+    // user_id is now always required since all bookings are online.
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -20,6 +21,7 @@ const bookingSchema = new mongoose.Schema(
       type: [String],
       required: true,
     },
+
     total_fare: {
       type: Number,
       required: true,
@@ -34,9 +36,9 @@ const bookingSchema = new mongoose.Schema(
 
     payment_id: {
       type: String,
+      required: true, // Now required as all bookings are prepaid online
     },
   },
-
   {
     timestamps: true,
   }
