@@ -10,7 +10,10 @@ import {
   getAdminNotifications,
   getTripStats,
   getAuditLogs,
+  getSOSAlerts,
 } from "../controllers/adminDashboard.controller.js";
+// View SOS alerts
+adminDashboardRouter.get("/sos-alerts", verifyToken, admin, getSOSAlerts);
 
 const adminDashboardRouter = express.Router();
 

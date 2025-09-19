@@ -1,3 +1,24 @@
+// Get confirmed/resolved issues for a specific bus
+import Trip from "../models/trip.model.js";
+export const getBusIssues = async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+    // Find trips for this bus
+    const trips = await Trip.find({ vehicle_id: vehicleId }).select("_id");
+    const tripIds = trips.map((t) => t._id);
+    // Find issues for these trips with status VIEWED, IN_PROGRESS, or RESOLVED
+    const issues = await IssueReport.find({
+      trip_id: { $in: tripIds },
+      status: { $in: ["VIEWED", "IN_PROGRESS", "RESOLVED"] },
+    })
+      .populate({ path: "trip_id", select: "departure_datetime" })
+      .populate({ path: "reported_by_staff_id", select: "employee_id" })
+      .sort({ createdAt: -1 });
+    res.status(200).json(issues);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 // Get issues reported by the current user (staff)
 export const getMyIssueReports = async (req, res) => {
   try {

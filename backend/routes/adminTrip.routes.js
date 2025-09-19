@@ -5,8 +5,21 @@ import {
   getAllTrips,
   getTripById,
   updateTripStatus,
+  recordOvercrowding,
+  getOvercrowdingByDay,
 } from "../controllers/trip.controller.js";
+import { getTripLocationHistory } from "../controllers/trip.controller.js";
 import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+// Record overcrowding event for a trip
+tripRouter.post("/:id/overcrowding", verifyToken, admin, recordOvercrowding);
+// Get overcrowding data by day
+tripRouter.get(
+  "/overcrowding/by-day",
+  verifyToken,
+  admin,
+  getOvercrowdingByDay
+);
+
 // All routes are protected for Admin access
 const tripRouter = express.Router();
 tripRouter
@@ -16,8 +29,10 @@ tripRouter
 
 tripRouter.route("/:id").get(verifyToken, admin, getTripById);
 // Get location history for a trip
-import { getTripLocationHistory } from "../controllers/trip.controller.js";
-tripRouter.route("/:id/location-history").get(verifyToken, admin, getTripLocationHistory);
+
+tripRouter
+  .route("/:id/location-history")
+  .get(verifyToken, admin, getTripLocationHistory);
 
 tripRouter.route("/:id/status").put(verifyToken, admin, updateTripStatus);
 

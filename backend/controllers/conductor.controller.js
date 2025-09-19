@@ -1,3 +1,23 @@
+import SOSAlert from "../models/sosAlert.model.js";
+// Send SOS alert
+export const sendSOSAlert = async (req, res) => {
+  try {
+    const staffProfile = await Staff.findOne({ user_id: req.user._id });
+    if (!staffProfile)
+      return res.status(404).json({ message: "Staff profile not found." });
+    const { trip_id, type, message, location } = req.body;
+    const alert = await SOSAlert.create({
+      trip_id,
+      staff_id: staffProfile._id,
+      type,
+      message,
+      location,
+    });
+    res.status(201).json({ message: "SOS alert sent.", alert });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending SOS alert" });
+  }
+};
 import Trip from "../models/trip.model.js";
 import Ticket from "../models/ticket.model.js";
 import Notification from "../models/notification.model.js";

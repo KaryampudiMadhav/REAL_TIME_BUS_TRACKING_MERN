@@ -8,7 +8,10 @@ import {
   getMyNotifications,
   getMyTripHistory,
   updateTripStatus,
+  sendSOSAlert,
 } from "../controllers/conductor.controller.js";
+// SOS alert
+conductorRouter.post("/sos", verifyToken, sendSOSAlert);
 import { verifyToken } from "./../middlewares/protectedRoutes.js";
 
 // ... other driver routes

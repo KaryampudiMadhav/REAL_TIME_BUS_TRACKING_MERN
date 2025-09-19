@@ -62,6 +62,13 @@ const tripSchema = new mongoose.Schema(
       },
     ],
     visited_stops: [visitedStopSchema],
+    // Overcrowding events: { date, passengerCount }
+    overcrowdingEvents: [
+      {
+        date: { type: Date, required: true },
+        passengerCount: { type: Number, required: true },
+      },
+    ],
   },
   {
     timestamps: true,

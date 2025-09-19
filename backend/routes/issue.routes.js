@@ -6,7 +6,10 @@ import {
   getAllIssueReports,
   updateIssueStatus,
   getMyIssueReports,
+  getBusIssues,
 } from "./../controllers/reportIssues.controller.js";
+// All users: get confirmed/resolved issues for a bus
+issueRouter.get("/bus/:vehicleId", verifyToken, getBusIssues);
 
 // Admin: get all issues
 issueRouter.route("/").get(verifyToken, admin, getAllIssueReports);

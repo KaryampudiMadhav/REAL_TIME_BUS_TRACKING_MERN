@@ -1,3 +1,16 @@
+import SOSAlert from "../models/sosAlert.model.js";
+// Get recent SOS alerts
+export const getSOSAlerts = async (req, res) => {
+  try {
+    const alerts = await SOSAlert.find()
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .populate("trip_id staff_id");
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching SOS alerts" });
+  }
+};
 import Trip from "../models/trip.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";

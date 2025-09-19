@@ -3,6 +3,55 @@ import Trip from "../models/trip.model.js";
 import Route from "../models/route.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";
+
+// Record overcrowding event for a trip
+export const recordOvercrowding = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { passengerCount } = req.body;
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: "Trip not found." });
+    trip.overcrowdingEvents.push({ date: new Date(), passengerCount });
+    await trip.save();
+    res.status(200).json({ message: "Overcrowding event recorded." });
+  } catch (error) {
+    res.status(500).json({ message: "Error recording overcrowding event" });
+  }
+};
+
+// Get overcrowding data by day
+export const getOvercrowdingByDay = async (req, res) => {
+  try {
+    // Optional: filter by date range
+    const { start, end } = req.query;
+    const match = {};
+    if (start && end) {
+      match.date = { $gte: new Date(start), $lte: new Date(end) };
+    }
+    // Aggregate overcrowding events by day
+    const trips = await Trip.aggregate([
+      { $unwind: "$overcrowdingEvents" },
+      { $match: match },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$overcrowdingEvents.date",
+            },
+          },
+          totalEvents: { $sum: 1 },
+          avgPassengerCount: { $avg: "$overcrowdingEvents.passengerCount" },
+          maxPassengerCount: { $max: "$overcrowdingEvents.passengerCount" },
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+    res.json(trips);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching overcrowding data" });
+  }
+};
 export const getTripLocationHistory = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id);
