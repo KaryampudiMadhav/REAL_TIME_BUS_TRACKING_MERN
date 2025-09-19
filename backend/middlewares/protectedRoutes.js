@@ -41,3 +41,10 @@ export const admin = async (req, res, next) => {
     res.status(500).json({ message: "Server error while checking admin role" });
   }
 };
+export const municipal = (req, res, next) => {
+  if (req.user && req.user.role === "MUNICIPAL") {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as a municipal user" });
+  }
+};

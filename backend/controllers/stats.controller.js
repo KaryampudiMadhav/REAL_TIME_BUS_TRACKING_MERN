@@ -1,7 +1,7 @@
 import Booking from "../models/booking.model.js";
 import Trip from "../models/trip.model.js";
 import Vehicle from "../models/vehicle.model.js";
-import SupportTicket from "../models/supportTicket.model.js";
+import SupportTicket from "./../models/ticket.model.js";
 export const getAdminDashboardStats = async (req, res) => {
   try {
     // --- Define Date Range for "Today" ---

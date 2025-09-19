@@ -1,13 +1,13 @@
 import express from "express";
 
+import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
 import {
   createRoute,
   getAllRoutes,
   getRouteById,
   updateRoute,
   deleteRoute,
-} from "../controllers/route.controller.js";
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+} from "./../controllers/adminRoutes.controller.js";
 const adminRoutesRouter = express.Router();
 // All routes are protected and require admin access
 adminRoutesRouter

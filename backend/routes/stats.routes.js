@@ -1,9 +1,11 @@
 import express from "express";
-const router = express.Router();
-import { getAdminDashboardStats } from "../controllers/analytics.controller.js";
+const statsRouter = express.Router();
 import { verifyToken, admin } from "./../middlewares/protectedRoutes.js";
+import { getAdminDashboardStats } from "./../controllers/stats.controller.js";
 
 // The route is protected and for admins only
-router.route("/admin-stats").get(verifyToken, admin, getAdminDashboardStats);
+statsRouter
+  .route("/admin-stats")
+  .get(verifyToken, admin, getAdminDashboardStats);
 
-export default router;
+export default statsRouter;

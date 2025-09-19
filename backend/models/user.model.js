@@ -9,6 +9,20 @@ const userSchema = new mongoose.Schema(
       required: [true, "Full name is required"],
       trim: true,
     },
+    // Unique ID for admin login
+    admin_id: {
+      type: String,
+      unique: true,
+      sparse: true, // Only required for admin
+      trim: true,
+    },
+    // Unique ID for municipal login
+    municipal_id: {
+      type: String,
+      unique: true,
+      sparse: true, // Only required for municipal
+      trim: true,
+    },
     email: {
       type: String,
       required: [true, "Email is required"],

@@ -6,22 +6,72 @@ import {
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordResetSuccessEmail,
-} from "../mails/mailFunctions.js"; // Using our new email controller
+} from "../mails/mailFunctions.js";
 import { generateTokenAndSetCookies } from "../utils/generateTokenandSetCookies.js";
 
 export const signUp = async (req, res) => {
-  const { fullName, email, password, contact_number, role } = req.body;
-  if (!fullName || !email || !password || !contact_number) {
+  const {
+    fullName,
+    email,
+    password,
+    contact_number,
+    role,
+    admin_id,
+    employee_id,
+    municipal_id,
+  } = req.body;
+  // Basic validation
+  if (!fullName || !email || !password || !contact_number || !role) {
     return res
       .status(400)
       .json({ success: false, error: "All fields are required." });
   }
+  // Admin must provide admin_id
+  if (role === "ADMIN" && !admin_id) {
+    return res.status(400).json({
+      success: false,
+      error: "Admin ID is required for admin signup.",
+    });
+  }
+  // Conductor must provide employee_id
+  if (role === "CONDUCTOR" && !employee_id) {
+    return res.status(400).json({
+      success: false,
+      error: "Employee ID is required for conductor signup.",
+    });
+  }
+  // Municipal must provide municipal_id
+  if (role === "MUNICIPAL" && !municipal_id) {
+    return res.status(400).json({
+      success: false,
+      error: "Municipal ID is required for municipal signup.",
+    });
+  }
   try {
+    // Check for existing user by email
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
       return res
         .status(400)
         .json({ success: false, error: "User already exists." });
+    }
+    // Check for existing admin_id
+    if (role === "ADMIN") {
+      const existingAdminId = await User.findOne({ admin_id });
+      if (existingAdminId) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Admin ID already exists." });
+      }
+    }
+    // Check for existing municipal_id
+    if (role === "MUNICIPAL") {
+      const existingMunicipalId = await User.findOne({ municipal_id });
+      if (existingMunicipalId) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Municipal ID already exists." });
+      }
     }
 
     const salt = await bcryptjs.genSalt(12);
@@ -33,33 +83,38 @@ export const signUp = async (req, res) => {
       password: hashedPassword,
       contact_number,
       role: role || "PASSENGER", // Default role is PASSENGER
+      admin_id: role === "ADMIN" ? admin_id : undefined,
+      municipal_id: role === "MUNICIPAL" ? municipal_id : undefined,
     });
 
     // --- NEW LOGIC ADDED HERE ---
     if (newUser.role === "PASSENGER") {
-      // Logic for passengers: send verification email
-      const verificationToken = Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-      newUser.verificationToken = verificationToken;
-      newUser.verificationTokenExpiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-      await newUser.save();
-      await sendVerificationEmail(newUser.email, verificationToken);
-
-      res.status(201).json({
-        success: true,
-        message:
-          "User registered. Please check your email to verify your account.",
-      });
+      // ...existing code...
     } else {
       // Logic for ADMIN, DRIVER, etc: auto-verify them
       newUser.isVerified = true;
       await newUser.save();
 
+      // If conductor, create staff profile with employee_id
+      if (newUser.role === "CONDUCTOR" && employee_id) {
+        const existingStaff = await Staff.findOne({ employee_id });
+        if (existingStaff) {
+          return res.status(400).json({
+            success: false,
+            error: "Employee ID already exists for conductor.",
+          });
+        }
+        await Staff.create({
+          user_id: newUser._id,
+          employee_id,
+          date_of_joining: new Date(),
+          is_active: true,
+        });
+      }
+
       await sendWelcomeEmail(newUser.email, newUser.fullName);
 
-      newUser.password = undefined; // Hide password from response
+      newUser.password = undefined;
       res.status(201).json({
         success: true,
         message: `New ${newUser.role.toLowerCase()} created and verified successfully.`,
@@ -116,15 +171,60 @@ export const verifyEmail = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, uniqueId } = req.body;
 
   try {
-    const user = await User.findOne({ email }).select("+password");
-
-    if (!user || !(await bcryptjs.compare(password, user.password))) {
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials." });
+    let user;
+    // Admin login with admin_id and password
+    if (uniqueId && req.body.role === "ADMIN") {
+      user = await User.findOne({ admin_id: uniqueId, role: "ADMIN" }).select(
+        "+password"
+      );
+      if (!user || !(await bcryptjs.compare(password, user.password))) {
+        return res
+          .status(401)
+          .json({ success: false, error: "Invalid admin credentials." });
+      }
+    }
+    // Conductor login with employee_id and password
+    else if (uniqueId && req.body.role === "CONDUCTOR") {
+      const staff = await Staff.findOne({ employee_id: uniqueId });
+      if (!staff) {
+        return res
+          .status(401)
+          .json({ success: false, error: "Invalid conductor credentials." });
+      }
+      user = await User.findById(staff.user_id).select("+password");
+      if (
+        !user ||
+        user.role !== "CONDUCTOR" ||
+        !(await bcryptjs.compare(password, user.password))
+      ) {
+        return res
+          .status(401)
+          .json({ success: false, error: "Invalid conductor credentials." });
+      }
+    }
+    // Municipal login with municipal_id and password
+    else if (uniqueId && req.body.role === "MUNICIPAL") {
+      user = await User.findOne({
+        municipal_id: uniqueId,
+        role: "MUNICIPAL",
+      }).select("+password");
+      if (!user || !(await bcryptjs.compare(password, user.password))) {
+        return res
+          .status(401)
+          .json({ success: false, error: "Invalid municipal credentials." });
+      }
+    }
+    // Default: email/password for other roles
+    else {
+      user = await User.findOne({ email }).select("+password");
+      if (!user || !(await bcryptjs.compare(password, user.password))) {
+        return res
+          .status(401)
+          .json({ success: false, error: "Invalid credentials." });
+      }
     }
     user.lastLogin = new Date();
     await user.save();

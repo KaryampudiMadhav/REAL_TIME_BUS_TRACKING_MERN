@@ -1,14 +1,13 @@
 import express from "express";
 
+import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
 import {
   createTicket,
   getMyTickets,
   getAllTickets,
   updateTicketStatus,
   addAdminNote,
-} from "../controllers/supportTicket.controller.js";
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
-// --- Routes for Passengers (any logged-in user) ---
+} from "./../controllers/support.controller.js";
 const supportRouter = express.Router();
 supportRouter.route("/").post(verifyToken, createTicket);
 
