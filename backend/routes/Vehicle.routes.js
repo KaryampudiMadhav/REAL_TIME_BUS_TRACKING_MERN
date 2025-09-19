@@ -7,7 +7,6 @@ import {
 } from "../controllers/Vehicle.controller.js";
 import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
 const vehicleRouter = express.Router();
-// All routes are protected and require admin access
 vehicleRouter
   .route("/")
   .post(verifyToken, admin, createVehicle)

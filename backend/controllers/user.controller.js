@@ -175,16 +175,13 @@ export const login = async (req, res) => {
 
   try {
     let user;
+    // Helper to check lock
+    const isLocked = (user) => user.lockUntil && user.lockUntil > Date.now();
     // Admin login with admin_id and password
     if (uniqueId && req.body.role === "ADMIN") {
       user = await User.findOne({ admin_id: uniqueId, role: "ADMIN" }).select(
-        "+password"
+        "+password passwordAttempts lockUntil"
       );
-      if (!user || !(await bcryptjs.compare(password, user.password))) {
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid admin credentials." });
-      }
     }
     // Conductor login with employee_id and password
     else if (uniqueId && req.body.role === "CONDUCTOR") {
@@ -194,38 +191,62 @@ export const login = async (req, res) => {
           .status(401)
           .json({ success: false, error: "Invalid conductor credentials." });
       }
-      user = await User.findById(staff.user_id).select("+password");
-      if (
-        !user ||
-        user.role !== "CONDUCTOR" ||
-        !(await bcryptjs.compare(password, user.password))
-      ) {
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid conductor credentials." });
-      }
+      user = await User.findById(staff.user_id).select(
+        "+password passwordAttempts lockUntil"
+      );
     }
     // Municipal login with municipal_id and password
     else if (uniqueId && req.body.role === "MUNICIPAL") {
       user = await User.findOne({
         municipal_id: uniqueId,
         role: "MUNICIPAL",
-      }).select("+password");
-      if (!user || !(await bcryptjs.compare(password, user.password))) {
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid municipal credentials." });
-      }
+      }).select("+password passwordAttempts lockUntil");
     }
     // Default: email/password for other roles
     else {
-      user = await User.findOne({ email }).select("+password");
-      if (!user || !(await bcryptjs.compare(password, user.password))) {
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid credentials." });
-      }
+      user = await User.findOne({ email }).select(
+        "+password passwordAttempts lockUntil"
+      );
     }
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    // Check if account is locked
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          error:
+            "Account locked due to too many failed attempts. Try again later.",
+        });
+    }
+    // Check password
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      user.passwordAttempts = (user.passwordAttempts || 0) + 1;
+      // Lock account after 3 failed attempts for 15 minutes
+      if (user.passwordAttempts >= 3) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000;
+        await user.save();
+        return res
+          .status(403)
+          .json({
+            success: false,
+            error:
+              "Account locked due to too many failed attempts. Try again in 15 minutes.",
+          });
+      }
+      await user.save();
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    // Reset attempts on successful login
+    user.passwordAttempts = 0;
+    user.lockUntil = undefined;
     user.lastLogin = new Date();
     await user.save();
 

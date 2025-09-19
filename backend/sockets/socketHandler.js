@@ -11,11 +11,20 @@ export const initializeSocketIO = (io) => {
 
     socket.on("location_update", async ({ tripId, location }) => {
       try {
-        await Trip.findByIdAndUpdate(tripId, {
-          live_location: location,
-          last_location_update: new Date(),
-        });
-
+        await Trip.findByIdAndUpdate(
+          tripId,
+          {
+            live_location: location,
+            last_location_update: new Date(),
+            $push: {
+              location_history: {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                timestamp: new Date(),
+              },
+            },
+          }
+        );
         io.to(tripId).emit("new_location", { tripId, location });
       } catch (error) {
         console.error("Error updating location:", error);

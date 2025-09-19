@@ -1,3 +1,28 @@
+// Get issues reported by the current user (staff)
+export const getMyIssueReports = async (req, res) => {
+  try {
+    // Find staff profile for current user
+    const staffProfile =
+      await require("../models/staff.model.js").default.findOne({
+        user_id: req.user._id,
+      });
+    if (!staffProfile) {
+      return res.status(404).json({ message: "Staff profile not found." });
+    }
+    const reports = await IssueReport.find({
+      reported_by_staff_id: staffProfile._id,
+    })
+      .populate({
+        path: "trip_id",
+        select: "departure_datetime",
+        populate: { path: "route_id", select: "routeName" },
+      })
+      .sort({ createdAt: -1 });
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 import IssueReport from "../models/issueReport.model.js";
 
 export const getAllIssueReports = async (req, res) => {

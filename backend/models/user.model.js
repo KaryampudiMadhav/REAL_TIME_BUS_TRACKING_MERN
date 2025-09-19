@@ -86,6 +86,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    // Track failed password attempts and lockout
+    passwordAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+    },
     password_reset_token: String,
     password_reset_expires: Date,
     verificationToken: String,

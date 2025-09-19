@@ -1,7 +1,20 @@
+// Get location history for a trip]
 import Trip from "../models/trip.model.js";
 import Route from "../models/route.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";
+export const getTripLocationHistory = async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ message: "Trip not found." });
+    res.json({ location_history: trip.location_history });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching location history",
+      error: error.message,
+    });
+  }
+};
 
 export const createTrip = async (req, res) => {
   const {

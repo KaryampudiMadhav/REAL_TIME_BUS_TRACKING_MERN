@@ -15,6 +15,9 @@ tripRouter
   .get(verifyToken, admin, getAllTrips);
 
 tripRouter.route("/:id").get(verifyToken, admin, getTripById);
+// Get location history for a trip
+import { getTripLocationHistory } from "../controllers/trip.controller.js";
+tripRouter.route("/:id/location-history").get(verifyToken, admin, getTripLocationHistory);
 
 tripRouter.route("/:id/status").put(verifyToken, admin, updateTripStatus);
 

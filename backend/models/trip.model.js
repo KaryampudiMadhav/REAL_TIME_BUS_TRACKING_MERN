@@ -53,6 +53,14 @@ const tripSchema = new mongoose.Schema(
       longitude: { type: Number },
     },
     last_location_update: { type: Date },
+    // Array of { latitude, longitude, timestamp }
+    location_history: [
+      {
+        latitude: { type: Number },
+        longitude: { type: Number },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
     visited_stops: [visitedStopSchema],
   },
   {

@@ -1,4 +1,6 @@
 import express from "express";
+import logger from "./utils/logger.js";
+import apiLimiter from "./utils/rateLimiter.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -34,6 +36,8 @@ const io = new Server(server, {
   },
 });
 
+// Apply rate limiting to all API routes
+app.use("/api/", apiLimiter);
 app.use("/api/auth", routes);
 app.use("/api/admin-routes", adminRoutesRouter);
 app.use("/api/admin-trips", tripRouter);
@@ -49,5 +53,11 @@ initializeSocketIO(io); // 2. Call the function and pass it the 'io' instance
 
 server.listen(PORT, () => {
   connectDB();
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
