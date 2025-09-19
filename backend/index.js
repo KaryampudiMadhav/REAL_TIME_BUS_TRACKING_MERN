@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { routes } from "./routes/user.routes.js";
 import connectDB from "./config/mongosee.connection.js";
 import adminRoutesRouter from "./routes/adminRoutes.routes.js";
+import adminDashboardRouter from "./routes/adminDashboard.routes.js";
 import tripRouter from "./routes/adminTrip.routes.js";
 import staffRouter from "./routes/staff.routes.js";
 import statsRouter from "./routes/stats.routes.js";
@@ -40,6 +41,7 @@ const io = new Server(server, {
 app.use("/api/", apiLimiter);
 app.use("/api/auth", routes);
 app.use("/api/admin-routes", adminRoutesRouter);
+app.use("/api/admin-dashboard", adminDashboardRouter);
 app.use("/api/admin-trips", tripRouter);
 app.use("/api/staff", staffRouter);
 app.use("/api/stats", statsRouter);
