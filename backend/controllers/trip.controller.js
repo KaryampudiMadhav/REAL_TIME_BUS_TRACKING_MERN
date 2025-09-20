@@ -1,5 +1,7 @@
 // Get location history for a trip]
 import Trip from "../models/trip.model.js";
+import Booking from "../models/booking.model.js";
+import Coupon from "../models/coupon.model.js";
 import Route from "../models/route.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";

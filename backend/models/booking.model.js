@@ -31,12 +31,25 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["CONFIRMED", "CANCELLED"],
+      enum: ["CONFIRMED", "CANCELLED_BY_USER", "CANCELLED_BY_ADMIN"],
       default: "CONFIRMED",
     },
     // payment_id is NOT required for offline cash sales
     payment_id: {
       type: String,
+    },
+    // --- NEW FIELD ADDED HERE ---
+    refund: {
+      refund_id: { type: String }, // The refund transaction ID from the payment gateway
+      amount: { type: Number },
+      status: { type: String, enum: ["PENDING", "PROCESSED", "FAILED"] },
+      processed_at: { type: Date },
+    },
+    // Coupon applied to booking (if any)
+    coupon: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
     },
   },
   {

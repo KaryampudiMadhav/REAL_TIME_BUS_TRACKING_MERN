@@ -41,6 +41,22 @@ export const admin = async (req, res, next) => {
     res.status(500).json({ message: "Server error while checking admin role" });
   }
 };
+
+export const conductor = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (user && user.role === "CONDUCTOR") {
+      next();
+    } else {
+      res.status(403).json({ message: "Not authorized as a conductor" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server error while checking conductor role" });
+  }
+};
+
 export const municipal = (req, res, next) => {
   if (req.user && req.user.role === "MUNICIPAL") {
     next();
