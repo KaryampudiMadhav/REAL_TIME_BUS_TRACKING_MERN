@@ -1,5 +1,97 @@
+// Middleware for staff conductor/driver check
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js"; // We need User model for the admin check
+import Staff from "../models/staff.model.js";
+
+export const staffConductorDriver = async (req, res, next) => {
+  try {
+    const token = req.cookies.staffjwt;
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized - no token provided" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (
+      !decoded.staffId ||
+      !(decoded.role === "CONDUCTOR" || decoded.role === "DRIVER")
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized as conductor or driver" });
+    }
+    const staff = await Staff.findById(decoded.staffId);
+    if (staff && (staff.role === "CONDUCTOR" || staff.role === "DRIVER")) {
+      req.staffId = decoded.staffId;
+      req.role = decoded.role;
+      next();
+    } else {
+      res
+        .status(403)
+        .json({ message: "Not authorized as conductor or driver" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server error while checking conductor/driver role" });
+  }
+};
+
+export const staffAdmin = async (req, res, next) => {
+  try {
+    const token = req.cookies.staffjwt;
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized - no token provided" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("adminmiddle decoded JWT:", decoded);
+    if (!decoded.staffId || decoded.role !== "ADMIN") {
+      return res.status(403).json({ message: "Not authorized as staff admin" });
+    }
+
+    const staff = await Staff.findById(decoded.staffId);
+    if (staff && staff.role === "ADMIN") {
+      req.staffId = decoded.staffId;
+      req.role = decoded.role;
+      next();
+    } else {
+      res.status(403).json({ message: "Not authorized as staff admin" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server error while checking staff admin role" });
+  }
+};
+
+// Middleware for staff municipal check
+export const staffMunicipal = async (req, res, next) => {
+  try {
+    const token = req.cookies.staffjwt;
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized - no token provided" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.staffId || decoded.role !== "MUNICIPAL") {
+      return res
+        .status(403)
+        .json({ message: "Not authorized as staff municipal" });
+    }
+    const staff = await Staff.findById(decoded.staffId);
+    if (staff && staff.role === "MUNICIPAL") {
+      next();
+    } else {
+      res.status(403).json({ message: "Not authorized as staff municipal" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server error while checking staff municipal role" });
+  }
+};
 
 export const verifyToken = (req, res, next) => {
   const token = req.cookies.jwt;
@@ -8,7 +100,6 @@ export const verifyToken = (req, res, next) => {
       .status(401)
       .json({ success: false, message: "Unauthorized - no token provided" });
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
@@ -16,51 +107,13 @@ export const verifyToken = (req, res, next) => {
         .status(401)
         .json({ success: false, message: "Unauthorized - invalid token" });
     }
-
-    // Attach the user's ID to the request object
-    req.userId = decoded.userId;
+    // Attach userId for user JWTs
+    if (decoded.userId) {
+      req.userId = decoded.userId;
+      console.log("User JWT:", req.userId);
+    }
     next();
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
-// This is the updated admin middleware that works with your verifyToken
-export const admin = async (req, res, next) => {
-  try {
-    // 1. Get the user from the database using the ID from verifyToken
-    const user = await User.findById(req.userId);
-
-    // 2. Check if the user exists and has the 'ADMIN' role
-    if (user && user.role === "ADMIN") {
-      next();
-    } else {
-      res.status(403).json({ message: "Not authorized as an admin" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: "Server error while checking admin role" });
-  }
-};
-
-export const conductor = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.userId);
-    if (user && user.role === "CONDUCTOR") {
-      next();
-    } else {
-      res.status(403).json({ message: "Not authorized as a conductor" });
-    }
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server error while checking conductor role" });
-  }
-};
-
-export const municipal = (req, res, next) => {
-  if (req.user && req.user.role === "MUNICIPAL") {
-    next();
-  } else {
-    res.status(403).json({ message: "Not authorized as a municipal user" });
   }
 };

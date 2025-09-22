@@ -19,8 +19,6 @@ const stopSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  // The scheduled departure time in minutes from the route's start time.
-  // This can be a few minutes after arrival to account for halt time.
   departure_offset_mins: {
     type: Number,
     required: true,
@@ -42,7 +40,6 @@ const routeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // The array of stops, now with a detailed schedule.
     stops: [stopSchema],
     distance_km: {
       type: Number,

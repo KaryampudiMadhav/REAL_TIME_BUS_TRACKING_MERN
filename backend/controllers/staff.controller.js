@@ -1,36 +1,236 @@
+// Staff login for ADMIN
+import bcryptjs from "bcryptjs";
+
 import Staff from "../models/staff.model.js";
-import User from "../models/user.model.js";
+import { generateStaffTokenAndSetCookiesAndStaff } from "../utils/generateStaffTokenAndSetCookiesForStaff.js";
+
+export const staffAdminLogin = async (req, res) => {
+  const { employee_id, password } = req.body;
+  if (!employee_id || !password) {
+    return res.status(400).json({
+      success: false,
+      error: "Employee ID and password are required.",
+    });
+  }
+  try {
+    const staff = await Staff.findOne({ employee_id }).select(
+      "+password is_active role"
+    );
+    console.log("Staff not found:", staff);
+    if (!staff) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    if (staff.role !== "ADMIN") {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    if (!staff.is_active) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Staff account is inactive." });
+    }
+    const isMatch = await bcryptjs.compare(password, staff.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    console.log("Generating token for staff:", staff._id, staff.role);
+    const token = await generateStaffTokenAndSetCookiesAndStaff(
+      res,
+      staff._id,
+      staff.role
+    );
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      staff: { ...staff._doc, password: undefined },
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Staff login for MUNICIPAL
+export const staffMunicipalLogin = async (req, res) => {
+  const { employee_id, password } = req.body;
+  if (!employee_id || !password) {
+    return res.status(400).json({
+      success: false,
+      error: "Employee ID and password are required.",
+    });
+  }
+  try {
+    const staff = await Staff.findOne({
+      employee_id,
+      role: "MUNICIPAL",
+    }).select("+password is_active");
+    if (!staff) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    if (!staff.is_active) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Staff account is inactive." });
+    }
+    const isMatch = await bcryptjs.compare(password, staff.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    const token = await generateStaffTokenAndSetCookiesAndStaff(
+      res,
+      staff._id,
+      staff.role
+    );
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      staff: { ...staff._doc, password: undefined },
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Staff login for CONDUCTOR/DRIVER
+export const staffWorkerLogin = async (req, res) => {
+  const { employee_id, password, role } = req.body;
+  if (!employee_id || !password || !role) {
+    return res.status(400).json({
+      success: false,
+      error: "Employee ID, password, and role are required.",
+    });
+  }
+  if (role !== "CONDUCTOR" && role !== "DRIVER") {
+    return res
+      .status(400)
+      .json({ success: false, error: "Role must be CONDUCTOR or DRIVER." });
+  }
+  try {
+    const staff = await Staff.findOne({ employee_id, role }).select(
+      "+password is_active"
+    );
+    if (!staff) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    if (!staff.is_active) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Staff account is inactive." });
+    }
+    const isMatch = await bcryptjs.compare(password, staff.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    const token = await generateStaffTokenAndSetCookiesAndStaff(
+      res,
+      staff._id,
+      staff.role
+    );
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      staff: { ...staff._doc, password: undefined },
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const staffLogout = async (req, res) => {
+  res.clearCookie("jwt");
+  res
+    .status(200)
+    .json({ success: true, message: "Staff logged out successfully." });
+};
+
+export const staffLogin = async (req, res) => {
+  const { employee_id, password } = req.body;
+  if (!employee_id || !password) {
+    return res.status(400).json({
+      success: false,
+      error: "Employee ID and password are required.",
+    });
+  }
+  try {
+    const staff = await Staff.findOne({ employee_id }).select(
+      "+password role is_active"
+    );
+    if (!staff || staff.role !== "ADMIN") {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    if (!staff.is_active) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Staff account is inactive." });
+    }
+    const isMatch = await bcryptjs.compare(password, staff.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    const token = await generateStaffTokenAndSetCookiesAndStaff(
+      res,
+      staff._id,
+      staff.role
+    );
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      staff: { ...staff._doc, password: undefined },
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 export const createStaff = async (req, res) => {
-  const { user_id, employee_id, depot_id, license_details } = req.body;
-
+  // Only admin can add staff
+  if (!req.user || req.user.role !== "ADMIN") {
+    return res.status(403).json({ message: "Only admin can add staff." });
+  }
+  const {
+    employee_id,
+    depot_id,
+    date_of_joining,
+    work_contact_number,
+    address,
+    license_details,
+    is_active,
+  } = req.body;
   try {
-    // 1. Check if the user exists
-    const user = await User.findById(user_id);
-    if (!user) {
-      return res.status(404).json({ message: "User to be linked not found." });
-    }
-    // 2. Check if the user has a valid role
-    if (user.role !== "DRIVER" && user.role !== "CONDUCTOR") {
-      return res
-        .status(400)
-        .json({ message: "User must have a DRIVER or CONDUCTOR role." });
-    }
-    // 3. Check if this user is already linked to another staff profile
-    const staffExists = await Staff.findOne({ user_id });
+    // Check for duplicate employee_id
+    const staffExists = await Staff.findOne({ employee_id });
     if (staffExists) {
-      return res
-        .status(400)
-        .json({ message: "This user is already linked to a staff profile." });
+      return res.status(400).json({ message: "Employee ID already exists." });
     }
-
     const newStaff = await Staff.create({
-      user_id,
       employee_id,
       depot_id,
-      license_details: user.role === "DRIVER" ? license_details : undefined,
+      date_of_joining,
+      work_contact_number,
+      address,
+      license_details,
+      is_active,
     });
-
     res.status(201).json(newStaff);
   } catch (error) {
     res
@@ -41,11 +241,7 @@ export const createStaff = async (req, res) => {
 
 export const getAllStaff = async (req, res) => {
   try {
-    // Populate user details to show name, email, and role
-    const staff = await Staff.find({}).populate(
-      "user_id",
-      "fullName email role"
-    );
+    const staff = await Staff.find({});
     res.status(200).json(staff);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

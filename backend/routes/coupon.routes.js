@@ -1,5 +1,5 @@
 import express from "express";
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+import { verifyToken, staffAdmin } from "../middlewares/protectedRoutes.js";
 import {
   createCoupon,
   getAllCoupons,
@@ -8,8 +8,8 @@ import {
 
 const couponRouter = express.Router();
 
-couponRouter.post("/", verifyToken, admin, createCoupon);
-couponRouter.get("/", verifyToken, admin, getAllCoupons);
-couponRouter.put("/:id/deactivate", verifyToken, admin, deactivateCoupon);
+couponRouter.post("/", verifyToken, staffAdmin, createCoupon);
+couponRouter.get("/", verifyToken, staffAdmin, getAllCoupons);
+couponRouter.put("/:id/deactivate", verifyToken, staffAdmin, deactivateCoupon);
 
 export default couponRouter;

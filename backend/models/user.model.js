@@ -1,4 +1,3 @@
-// models/user.model.js
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -9,98 +8,89 @@ const userSchema = new mongoose.Schema(
       required: [true, "Full name is required"],
       trim: true,
     },
-    // Unique ID for admin login
-    admin_id: {
-      type: String,
-      unique: true,
-      sparse: true, // Only required for admin
-      trim: true,
-    },
-    // Unique ID for municipal login
-    municipal_id: {
-      type: String,
-      unique: true,
-      sparse: true, // Only required for municipal
-      trim: true,
-    },
     email: {
       type: String,
       required: [true, "Email is required"],
       unique: true,
       lowercase: true,
-      trim: true,
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please fill a valid email address",
+        "Please provide a valid email address",
       ],
-    },
-    age: {
-      type: Number,
-      min: [0, "Age cannot be negative"],
-      max: [120, "Age seems unrealistic"],
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      select: false, // Prevents the password from being sent back in queries by default
     },
     contact_number: {
       type: String,
       required: [true, "Contact number is required"],
+      match: [
+        /^(?:\+91)?[6-9]\d{9}$/,
+        "Please provide a valid 10-digit Indian mobile number",
+      ],
     },
-    // aadhaar_number: {
-    //   type: String,
-    //   unique: true,
-    //   match: [/^\d{12}$/, "Aadhaar number must be exactly 12 digits."],
-    // },
-    // --- Authorization & Status ---
-    role: {
+    password: {
       type: String,
-      required: true,
-      enum: {
-        values: ["PASSENGER", "DRIVER", "CONDUCTOR", "ADMIN", "MUNICIPAL"],
-        message: "{VALUE} is not a supported role",
-      },
-    },
-    is_active: {
-      type: Boolean,
-      default: true, // Allows an admin to deactivate an account
+      required: [true, "Password is required"],
+      select: false, // Prevents password from being sent in API responses
     },
 
-    // --- Optional Profile Fields ---
+    // Authorization & Profile removed: user model is now only for passengers
     profile_picture_url: {
       type: String,
       default: "",
     },
-    // --- Summary Data (updated by server logic for performance) ---
-    total_journeys: {
-      type: Number,
-      default: 0,
-    },
+
+    // --- Verification Status ---
     isVerified: {
       type: Boolean,
-      required: true,
       default: false,
     },
-    lastLogin: {
-      type: Date,
-      default: Date.now(),
+    verificationToken: {
+      type: String,
+      select: false,
     },
-    // Track failed password attempts and lockout
+    verificationTokenExpiresAt: {
+      type: Date,
+      select: false,
+    },
+    is_phone_verified: {
+      type: Boolean,
+      default: false,
+    },
+    phone_otp: {
+      type: String,
+      select: false,
+    },
+    phone_otp_expires_at: {
+      type: Date,
+      select: false,
+    },
+
+    // --- Security & Account Management ---
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpiresAt: {
+      type: Date,
+      select: false,
+    },
     passwordAttempts: {
       type: Number,
       default: 0,
+      select: false,
     },
     lockUntil: {
       type: Date,
+      select: false,
     },
-    password_reset_token: String,
-    password_reset_expires: Date,
-    verificationToken: String,
-    verificationTokenExpiresAt: Date,
+    is_active: {
+      type: Boolean,
+      default: true,
+    },
+    lastLogin: {
+      type: Date, // This is set by the login controller
+    },
   },
   {
-    // Automatically adds createdAt and updatedAt fields
     timestamps: true,
   }
 );

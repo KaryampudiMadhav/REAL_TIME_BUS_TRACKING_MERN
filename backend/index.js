@@ -21,14 +21,14 @@ import issueRouter from "./routes/issue.routes.js";
 import muncipalRouter from "./routes/muncipal.routes.js";
 import orsmRouter from "./routes/orsm.routes.js";
 import couponRouter from "./routes/coupon.routes.js";
-import { startAlertSystem } from "./jobs/alertSystem.js";
+import { AlertSystem } from "./jobs/alertSystem.jobs.js";
 
 dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-startAlertSystem();
+AlertSystem();
 
 app.use(cors());
 app.use(express.json());

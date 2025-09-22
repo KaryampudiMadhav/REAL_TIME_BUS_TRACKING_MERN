@@ -1,77 +1,84 @@
+import crypto from "crypto";
+import { sendSMS } from "../utils/smsService.js";
 import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
-import crypto from "crypto";
+import { generateTokenAndSetCookies } from "./../utils/generateTokenandSetCookies.js";
 import {
   sendVerificationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordResetSuccessEmail,
 } from "../mails/mailFunctions.js";
-import { generateTokenAndSetCookies } from "../utils/generateTokenandSetCookies.js";
+
+export const sendPhoneOTP = async (req, res) => {
+  const { contact_number } = req.body;
+  if (!contact_number) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Contact number is required." });
+  }
+  try {
+    const user = await User.findOne({ contact_number });
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.phone_otp = otp;
+    user.phone_otp_expires_at = Date.now() + 10 * 60 * 1000; // 10 min expiry
+    await user.save();
+    await sendSMS(contact_number, `BusYour verification code is ${otp}`);
+    res.status(200).json({ success: true, message: "OTP sent to mobile." });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error." });
+  }
+};
+
+export const verifyPhoneOTP = async (req, res) => {
+  const { contact_number, otp } = req.body;
+  if (!contact_number || !otp) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Contact number and OTP are required." });
+  }
+  try {
+    const user = await User.findOne({ contact_number });
+    if (!user || !user.phone_otp || !user.phone_otp_expires_at) {
+      return res
+        .status(400)
+        .json({ success: false, error: "OTP not requested or expired." });
+    }
+    if (user.phone_otp !== otp || user.phone_otp_expires_at < Date.now()) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid or expired OTP." });
+    }
+    user.is_phone_verified = true;
+    user.phone_otp = undefined;
+    user.phone_otp_expires_at = undefined;
+    await user.save();
+    res.status(200).json({ success: true, message: "Mobile number verified." });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error." });
+  }
+};
 
 export const signUp = async (req, res) => {
-  const {
-    fullName,
-    email,
-    password,
-    contact_number,
-    role,
-    admin_id,
-    employee_id,
-    municipal_id,
-  } = req.body;
-  // Basic validation
-  if (!fullName || !email || !password || !contact_number || !role) {
+  const { fullName, email, password, contact_number } = req.body;
+
+  if (!fullName || !email || !password || !contact_number) {
     return res
       .status(400)
       .json({ success: false, error: "All fields are required." });
   }
-  // Admin must provide admin_id
-  if (role === "ADMIN" && !admin_id) {
-    return res.status(400).json({
-      success: false,
-      error: "Admin ID is required for admin signup.",
-    });
-  }
-  // Conductor must provide employee_id
-  if (role === "CONDUCTOR" && !employee_id) {
-    return res.status(400).json({
-      success: false,
-      error: "Employee ID is required for conductor signup.",
-    });
-  }
-  // Municipal must provide municipal_id
-  if (role === "MUNICIPAL" && !municipal_id) {
-    return res.status(400).json({
-      success: false,
-      error: "Municipal ID is required for municipal signup.",
-    });
-  }
+
   try {
-    // Check for existing user by email
-    const existingUser = await User.findOne({ email: email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res
         .status(400)
-        .json({ success: false, error: "User already exists." });
-    }
-    // Check for existing admin_id
-    if (role === "ADMIN") {
-      const existingAdminId = await User.findOne({ admin_id });
-      if (existingAdminId) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Admin ID already exists." });
-      }
-    }
-    // Check for existing municipal_id
-    if (role === "MUNICIPAL") {
-      const existingMunicipalId = await User.findOne({ municipal_id });
-      if (existingMunicipalId) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Municipal ID already exists." });
-      }
+        .json({ success: false, error: "User already exists. Please log in." });
     }
 
     const salt = await bcryptjs.genSalt(12);
@@ -82,45 +89,63 @@ export const signUp = async (req, res) => {
       email,
       password: hashedPassword,
       contact_number,
-      role: role || "PASSENGER", // Default role is PASSENGER
-      admin_id: role === "ADMIN" ? admin_id : undefined,
-      municipal_id: role === "MUNICIPAL" ? municipal_id : undefined,
     });
 
-    // --- NEW LOGIC ADDED HERE ---
-    if (newUser.role === "PASSENGER") {
-      // ...existing code...
-    } else {
-      // Logic for ADMIN, DRIVER, etc: auto-verify them
-      newUser.isVerified = true;
-      await newUser.save();
+    // Passenger signup (email verification required)
+    const verificationToken = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    newUser.verificationToken = verificationToken;
+    newUser.verificationTokenExpiresAt = Date.now() + 15 * 60 * 1000;
+    await newUser.save();
+    await sendVerificationEmail(newUser.email, verificationToken);
+    newUser.password = undefined;
+    res.status(201).json({
+      success: true,
+      message:
+        "User registered. Please check your email to verify your account.",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error." });
+  }
+};
 
-      // If conductor, create staff profile with employee_id
-      if (newUser.role === "CONDUCTOR" && employee_id) {
-        const existingStaff = await Staff.findOne({ employee_id });
-        if (existingStaff) {
-          return res.status(400).json({
-            success: false,
-            error: "Employee ID already exists for conductor.",
-          });
-        }
-        await Staff.create({
-          user_id: newUser._id,
-          employee_id,
-          date_of_joining: new Date(),
-          is_active: true,
-        });
-      }
+export const resendVerificationEmail = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
 
-      await sendWelcomeEmail(newUser.email, newUser.fullName);
-
-      newUser.password = undefined;
-      res.status(201).json({
-        success: true,
-        message: `New ${newUser.role.toLowerCase()} created and verified successfully.`,
-        user: newUser,
+    // 1. If no user is found, send a generic success message for security.
+    if (!user) {
+      return res.status(200).json({
+        message:
+          "If an account with that email exists, a new verification email has been sent.",
       });
     }
+
+    // 2. Check if the user is already verified.
+    if (user.isVerified) {
+      return res
+        .status(400)
+        .json({ message: "This account has already been verified." });
+    }
+
+    // 3. Generate a NEW verification token and save it.
+    const verificationToken = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiresAt = Date.now() + 15 * 60 * 1000; // New 15-minute expiry
+    await user.save();
+
+    // 4. Send the new verification email.
+    await sendVerificationEmail(user.email, verificationToken);
+
+    res.status(200).json({
+      success: true,
+      message: "A new verification email has been sent.",
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error." });
@@ -170,101 +195,6 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
-  const { email, password, uniqueId } = req.body;
-
-  try {
-    let user;
-    // Helper to check lock
-    const isLocked = (user) => user.lockUntil && user.lockUntil > Date.now();
-    // Admin login with admin_id and password
-    if (uniqueId && req.body.role === "ADMIN") {
-      user = await User.findOne({ admin_id: uniqueId, role: "ADMIN" }).select(
-        "+password passwordAttempts lockUntil"
-      );
-    }
-    // Conductor login with employee_id and password
-    else if (uniqueId && req.body.role === "CONDUCTOR") {
-      const staff = await Staff.findOne({ employee_id: uniqueId });
-      if (!staff) {
-        return res
-          .status(401)
-          .json({ success: false, error: "Invalid conductor credentials." });
-      }
-      user = await User.findById(staff.user_id).select(
-        "+password passwordAttempts lockUntil"
-      );
-    }
-    // Municipal login with municipal_id and password
-    else if (uniqueId && req.body.role === "MUNICIPAL") {
-      user = await User.findOne({
-        municipal_id: uniqueId,
-        role: "MUNICIPAL",
-      }).select("+password passwordAttempts lockUntil");
-    }
-    // Default: email/password for other roles
-    else {
-      user = await User.findOne({ email }).select(
-        "+password passwordAttempts lockUntil"
-      );
-    }
-    if (!user) {
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials." });
-    }
-    // Check if account is locked
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          error:
-            "Account locked due to too many failed attempts. Try again later.",
-        });
-    }
-    // Check password
-    const isMatch = await bcryptjs.compare(password, user.password);
-    if (!isMatch) {
-      user.passwordAttempts = (user.passwordAttempts || 0) + 1;
-      // Lock account after 3 failed attempts for 15 minutes
-      if (user.passwordAttempts >= 3) {
-        user.lockUntil = Date.now() + 15 * 60 * 1000;
-        await user.save();
-        return res
-          .status(403)
-          .json({
-            success: false,
-            error:
-              "Account locked due to too many failed attempts. Try again in 15 minutes.",
-          });
-      }
-      await user.save();
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials." });
-    }
-    // Reset attempts on successful login
-    user.passwordAttempts = 0;
-    user.lockUntil = undefined;
-    user.lastLogin = new Date();
-    await user.save();
-
-    const token = generateTokenAndSetCookies(res, user._id, user.role);
-    user.password = undefined;
-
-    res.status(200).json({
-      success: true,
-      message: "Login Successful",
-      token,
-      user,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -284,16 +214,16 @@ export const forgotPassword = async (req, res) => {
     const resetToken = crypto.randomBytes(20).toString("hex");
 
     // 2. Hash the token and save it to the database
-    user.password_reset_token = crypto
+    user.passwordResetToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
-    user.password_reset_expires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    user.passwordResetExpiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
     // 3. Create the reset URL with the original (un-hashed) token
     const resetUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
-
+    console.log(resetUrl);
     // 4. Send the email
     await sendPasswordResetEmail(user.email, resetUrl);
 
@@ -316,8 +246,8 @@ export const resetPassword = async (req, res) => {
 
     // 2. Find the user by the HASHED token and check if it has not expired
     const user = await User.findOne({
-      password_reset_token: hashedToken,
-      password_reset_expires: { $gt: Date.now() },
+      passwordResetToken: hashedToken,
+      passwordResetExpiresAt: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -331,8 +261,8 @@ export const resetPassword = async (req, res) => {
     user.password = await bcryptjs.hash(password, salt);
 
     // 4. Clear the reset token fields
-    user.password_reset_token = undefined;
-    user.password_reset_expires = undefined;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpiresAt = undefined;
 
     await user.save();
 
@@ -384,4 +314,71 @@ export const Logout = async (req, res) => {
   res
     .status(200)
     .json({ success: true, message: "User Logged Out Successfully." });
+};
+
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    let user;
+    // Helper to check lock
+    const isLocked = (user) => user.lockUntil && user.lockUntil > Date.now();
+    // User login (passenger only)
+    if (email) {
+      user = await User.findOne({ email }).select(
+        "+password passwordAttempts lockUntil isVerified"
+      );
+      if (!user)
+        return res
+          .status(401)
+          .json({ success: false, error: "Invalid credentials." });
+      if (!user.isVerified)
+        return res.status(401).json({
+          success: false,
+          error: "Please verify your email to login.",
+        });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing login credentials." });
+    }
+    // Check if account is locked
+    if (isLocked(user)) {
+      return res.status(403).json({
+        success: false,
+        error:
+          "Account locked due to too many failed attempts. Try again later.",
+      });
+    }
+    // Check password
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      user.passwordAttempts = (user.passwordAttempts || 0) + 1;
+      if (user.passwordAttempts >= 3) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000;
+        await user.save();
+        return res.status(403).json({
+          success: false,
+          error:
+            "Account locked due to too many failed attempts. Try again in 15 minutes.",
+        });
+      }
+      await user.save();
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials." });
+    }
+    // Reset attempts on successful login
+    user.passwordAttempts = 0;
+    user.lockUntil = undefined;
+    user.lastLogin = new Date();
+    await user.save();
+    const token = generateTokenAndSetCookies(res, user._id);
+    user.password = undefined;
+    res
+      .status(200)
+      .json({ success: true, message: "Login Successful", token, user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };

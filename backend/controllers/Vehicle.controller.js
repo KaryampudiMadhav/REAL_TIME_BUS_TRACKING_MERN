@@ -1,9 +1,22 @@
+import Depot from "../models/Depot.model.js";
 import Vehicle from "../models/vehicle.model.js";
-import Depot from "../models/depot.model.js"; // Needed to validate depot_id
 
 export const createVehicle = async (req, res) => {
-  const { bus_number, service_type, total_seats, amenities, depot_id } =
+  const { bus_number, service_type, total_seats, amenities, depot_id, status } =
     req.body;
+
+  //  "bus_number": "AP37UD1234",
+  // "service_type": "Ultra Deluxe",
+  // "total_seats": 48,
+  // "amenities": ["AC", "Push-back Seats"],
+  // "depot_id": "68cc2a7f940bd1566cef2b4e",
+  // "status": "AVAILABLE"
+
+  if (!bus_number || !service_type || !total_seats || !depot_id || !status) {
+    return res
+      .status(400)
+      .json({ message: "Please provide all required fields." });
+  }
 
   try {
     // Check if a vehicle with this bus number already exists
@@ -19,6 +32,7 @@ export const createVehicle = async (req, res) => {
     if (!depotExists) {
       return res
         .status(404)
+
         .json({ message: "Depot not found. Cannot add vehicle." });
     }
 
@@ -28,6 +42,7 @@ export const createVehicle = async (req, res) => {
       total_seats,
       amenities,
       depot_id,
+      status,
     });
 
     res.status(201).json(vehicle);

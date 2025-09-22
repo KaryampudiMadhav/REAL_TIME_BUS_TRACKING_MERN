@@ -1,7 +1,5 @@
-// Get location history for a trip]
+// Get location history for a trip
 import Trip from "../models/trip.model.js";
-import Booking from "../models/booking.model.js";
-import Coupon from "../models/coupon.model.js";
 import Route from "../models/route.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";
@@ -54,6 +52,7 @@ export const getOvercrowdingByDay = async (req, res) => {
     res.status(500).json({ message: "Error fetching overcrowding data" });
   }
 };
+
 export const getTripLocationHistory = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id);
@@ -90,6 +89,15 @@ export const createTrip = async (req, res) => {
 
     const driver = await Staff.findById(driver_id);
     if (!driver) return res.status(404).json({ message: "Driver not found." });
+
+    // Set conductor is_on_duty to true when assigned
+    if (conductor_id) {
+      const conductor = await Staff.findById(conductor_id);
+      if (!conductor)
+        return res.status(404).json({ message: "Conductor not found." });
+      conductor.is_on_duty = true;
+      await conductor.save();
+    }
 
     // --- Create Trip ---
     const arrival_datetime = new Date(departure_datetime);

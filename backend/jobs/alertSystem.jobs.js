@@ -2,9 +2,8 @@ import cron from "node-cron";
 import Trip from "../models/trip.model.js";
 import Depot from "../models/depot.model.js";
 import IssueReport from "../models/issueReport.model.js";
-import { startAlertSystem } from "./jobs/alertSystem.js";
 
-export const startAlertSystem = () => {
+export const AlertSystem = () => {
   cron.schedule("*/10 * * * *", async () => {
     console.log("Running stalled bus check...");
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);

@@ -1,3 +1,54 @@
+export const TICKET_CONFIRMATION_TEMPLATE = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd;">
+  
+  <div style="background: linear-gradient(to right, #007BFF, #0056b3); padding: 20px; text-align: center;">
+    <h1 style="color: white; margin: 0;">Booking Confirmed!</h1>
+  </div>
+  
+  <div style="padding: 20px;">
+    <p>Hello <strong>{passengerName}</strong>,</p>
+    <p>Your booking is confirmed. Here are the details of your trip:</p>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Route:</td>
+        <td style="padding: 10px;">{routeName}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Departure:</td>
+        <td style="padding: 10px;">{departureDateTime}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Seats:</td>
+        <td style="padding: 10px; font-weight: bold; color: #007BFF;">{seatNumbers}</td>
+      </tr>
+       <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Total Fare:</td>
+        <td style="padding: 10px;">₹{totalFare}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; font-weight: bold;">Booking ID:</td>
+        <td style="padding: 10px;">{bookingId}</td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <p style="margin-bottom: 10px;">Show this QR code to the conductor:</p>
+        <img src="{qrCodeUrl}" alt="Booking QR Code" style="width: 150px; height: 150px;">
+    </div>
+    
+    <p>We wish you a safe and pleasant journey!</p>
+    <p>Best regards,<br>The Bus Tracking Team</p>
+  </div>
+</body>
+</html>
+`;
 export const VERIFICATION_EMAIL_TEMPLATE = `
 <!DOCTYPE html>
 <html lang="en">
@@ -27,7 +78,6 @@ export const VERIFICATION_EMAIL_TEMPLATE = `
 </body>
 </html>
 `;
-
 export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
 <!DOCTYPE html>
 <html lang="en">
@@ -64,7 +114,6 @@ export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
 </body>
 </html>
 `;
-
 export const PASSWORD_RESET_REQUEST_TEMPLATE = `
 <!DOCTYPE html>
 <html lang="en">
@@ -104,7 +153,7 @@ export const WELCOME_EMAIL_TEMPLATE = `
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   
   <div style="background: linear-gradient(to right, #007BFF, #0056b3); padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
-    <h1 style="color: white; margin: 0;">Welcome Aboard, {name}!</h1>
+    <h1 style="color: white; margin: 0;">Welcome to BusNext, {name}!</h1>
   </div>
   
   <div style="background-color: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -112,7 +161,7 @@ export const WELCOME_EMAIL_TEMPLATE = `
     <p>Thank you for joining our Bus Tracking community! Your email has been successfully verified, and your account is now active.</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <img src="https://i.imgur.com/IV5f2hD.png" alt="Welcome Bus" style="max-width: 150px;">
+      <img src={imageUrl} alt="Welcome Bus" style="max-width: 150px;">
     </div>
 
     <p>You can now log in to book tickets, track buses in real-time, and manage your journeys all in one place.</p>

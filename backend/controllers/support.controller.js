@@ -1,4 +1,4 @@
-import SupportTicket from "./../models/ticket.model.js";
+import SupportTicket from "./../models/support.model.js";
 export const createTicket = async (req, res) => {
   const { trip_id, category, subject, description } = req.body;
   try {

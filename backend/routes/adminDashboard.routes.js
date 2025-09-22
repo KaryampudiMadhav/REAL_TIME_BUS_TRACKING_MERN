@@ -1,5 +1,5 @@
 import express from "express";
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+import { verifyToken, staffAdmin } from "../middlewares/protectedRoutes.js";
 import {
   getDashboardOverview,
   getAllBuses,
@@ -13,23 +13,26 @@ import {
   getSOSAlerts,
 } from "../controllers/adminDashboard.controller.js";
 // View SOS alerts
-adminDashboardRouter.get("/sos-alerts", verifyToken, admin, getSOSAlerts);
-
 const adminDashboardRouter = express.Router();
-
-adminDashboardRouter.get("/overview", verifyToken, admin, getDashboardOverview);
-adminDashboardRouter.get("/buses", verifyToken, admin, getAllBuses);
-adminDashboardRouter.get("/staff", verifyToken, admin, getAllStaff);
-adminDashboardRouter.get("/users", verifyToken, admin, getAllUsers);
-adminDashboardRouter.get("/trips", verifyToken, admin, getAllTrips);
-adminDashboardRouter.get("/issues", verifyToken, admin, getAllIssues);
+adminDashboardRouter.get("/sos-alerts", verifyToken, staffAdmin, getSOSAlerts);
+adminDashboardRouter.get(
+  "/overview",
+  verifyToken,
+  staffAdmin,
+  getDashboardOverview
+);
+adminDashboardRouter.get("/buses", verifyToken, staffAdmin, getAllBuses);
+adminDashboardRouter.get("/staff", verifyToken, staffAdmin, getAllStaff);
+adminDashboardRouter.get("/users", verifyToken, staffAdmin, getAllUsers);
+adminDashboardRouter.get("/trips", verifyToken, staffAdmin, getAllTrips);
+adminDashboardRouter.get("/issues", verifyToken, staffAdmin, getAllIssues);
 adminDashboardRouter.get(
   "/notifications",
   verifyToken,
-  admin,
+  staffAdmin,
   getAdminNotifications
 );
-adminDashboardRouter.get("/trip-stats", verifyToken, admin, getTripStats);
-adminDashboardRouter.get("/audit-logs", verifyToken, admin, getAuditLogs);
+adminDashboardRouter.get("/trip-stats", verifyToken, staffAdmin, getTripStats);
+adminDashboardRouter.get("/audit-logs", verifyToken, staffAdmin, getAuditLogs);
 
 export default adminDashboardRouter;

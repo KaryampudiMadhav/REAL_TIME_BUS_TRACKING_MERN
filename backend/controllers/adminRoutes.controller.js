@@ -1,4 +1,6 @@
 import Route from "../models/route.model.js";
+import User from "../models/user.model.js";
+import bcryptjs from "bcryptjs";
 
 export const createRoute = async (req, res) => {
   const { routeName, origin, destination, stops, distance_km } = req.body;
@@ -85,5 +87,47 @@ export const deleteRoute = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const createUserByAdmin = async (req, res) => {
+  const { fullName, email, password, contact_number, role } = req.body;
+
+  if (!fullName || !email || !password || !contact_number || !role) {
+    return res
+      .status(400)
+      .json({ success: false, error: "All fields are required." });
+  }
+
+  try {
+    const existingUser = await User.findOne({ email: email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, error: "User already exists." });
+    }
+
+    const salt = await bcryptjs.genSalt(12);
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    // Admin can specify the role. The new user is auto-verified.
+    const newUser = await User.create({
+      fullName,
+      email,
+      password: hashedPassword,
+      contact_number,
+      role,
+      isVerified: true,
+    });
+
+    newUser.password = undefined;
+    res.status(201).json({
+      success: true,
+      message: `New ${role.toLowerCase()} user created successfully.`,
+      user: newUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error." });
   }
 };

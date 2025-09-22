@@ -10,35 +10,26 @@ import {
 } from "../controllers/trip.controller.js";
 import { createBooking } from "../controllers/booking.controller.js";
 import { getTripLocationHistory } from "../controllers/trip.controller.js";
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
-// Record overcrowding event for a trip
-tripRouter.post("/:id/overcrowding", verifyToken, admin, recordOvercrowding);
-// Get overcrowding data by day
-tripRouter.get(
-  "/overcrowding/by-day",
-  verifyToken,
-  admin,
-  getOvercrowdingByDay
-);
+import { verifyToken, staffAdmin } from "../middlewares/protectedRoutes.js";
 
-// All routes are protected for Admin access
 const tripRouter = express.Router();
 
-tripRouter
-  .route("/")
-  .post(verifyToken, admin, createTrip)
-  .get(verifyToken, admin, getAllTrips);
+tripRouter.post("/:id/overcrowding", staffAdmin, recordOvercrowding);
+
+tripRouter.get("/overcrowding/by-day", staffAdmin, getOvercrowdingByDay);
+
+tripRouter.route("/").post(staffAdmin, createTrip).get(staffAdmin, getAllTrips);
 
 // Booking creation with coupon/discount
-tripRouter.post("/book", verifyToken, createBooking);
+tripRouter.post("/book", createBooking);
 
-tripRouter.route("/:id").get(verifyToken, admin, getTripById);
+tripRouter.route("/:id").get(staffAdmin, getTripById);
 // Get location history for a trip
 
 tripRouter
   .route("/:id/location-history")
-  .get(verifyToken, admin, getTripLocationHistory);
+  .get(staffAdmin, getTripLocationHistory);
 
-tripRouter.route("/:id/status").put(verifyToken, admin, updateTripStatus);
+tripRouter.route("/:id/status").put(staffAdmin, updateTripStatus);
 
 export default tripRouter;

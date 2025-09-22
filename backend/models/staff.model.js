@@ -3,17 +3,18 @@ import mongoose from "mongoose";
 
 const staffSchema = new mongoose.Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      unique: true,
-    },
+    // user_id removed: staff and user are now separate entities
     employee_id: {
       type: String,
       required: true,
       unique: true,
       trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["ADMIN", "MUNICIPAL", "DRIVER", "CONDUCTOR"],
+      required: true,
+      description: "Staff role: ADMIN, MUNICIPAL, DRIVER, or CONDUCTOR",
     },
     depot_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,6 +27,10 @@ const staffSchema = new mongoose.Schema(
     is_active: {
       type: Boolean,
       default: true, // Allows admin to mark an employee as currently employed
+    },
+    is_on_duty: {
+      type: Boolean,
+      default: false, // True if staff is currently assigned to work
     },
     // --- Contact & Address ---
     work_contact_number: {
@@ -46,6 +51,11 @@ const staffSchema = new mongoose.Schema(
       expiry_date: {
         type: Date,
       },
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false,
     },
   },
   {

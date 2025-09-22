@@ -1,6 +1,6 @@
 import express from "express";
 
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+import { verifyToken, staffAdmin } from "../middlewares/protectedRoutes.js";
 import {
   createTicket,
   getMyTickets,
@@ -14,10 +14,12 @@ supportRouter.route("/").post(verifyToken, createTicket);
 supportRouter.route("/mytickets").get(verifyToken, getMyTickets);
 
 // --- Routes for Admins ---
-supportRouter.route("/admin").get(verifyToken, admin, getAllTickets);
+supportRouter.route("/admin").get(verifyToken, staffAdmin, getAllTickets);
 
-supportRouter.route("/:id/status").put(verifyToken, admin, updateTicketStatus);
+supportRouter
+  .route("/:id/status")
+  .put(verifyToken, staffAdmin, updateTicketStatus);
 
-supportRouter.route("/:id/notes").post(verifyToken, admin, addAdminNote);
+supportRouter.route("/:id/notes").post(verifyToken, staffAdmin, addAdminNote);
 
 export default supportRouter;

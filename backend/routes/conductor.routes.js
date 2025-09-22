@@ -1,5 +1,4 @@
 import express from "express";
-const conductorRouter = express.Router();
 
 import {
   createIssueReport,
@@ -10,40 +9,30 @@ import {
   updateTripStatus,
   sendSOSAlert,
 } from "../controllers/conductor.controller.js";
-// SOS alert
-conductorRouter.post("/sos", verifyToken, sendSOSAlert);
-import { verifyToken, conductor } from "./../middlewares/protectedRoutes.js";
 
+const conductorRouter = express.Router();
+
+import { staffConductorDriver } from "./../middlewares/protectedRoutes.js";
+
+conductorRouter.post("/sos", staffConductorDriver, sendSOSAlert);
 // ... other driver routes
-conductorRouter.post("/issues", verifyToken, conductor, createIssueReport);
+conductorRouter.post("/issues", staffConductorDriver, createIssueReport);
 // Trip dashboard
-conductorRouter.get("/my-trips", verifyToken, conductor, getMyTrips);
+conductorRouter.get("/my-trips", staffConductorDriver, getMyTrips);
 // Passenger management
 conductorRouter.get(
   "/trip/:tripId/passengers",
-  verifyToken,
-  conductor,
+  staffConductorDriver,
   getTripPassengers
 );
 // Notifications
-conductorRouter.get(
-  "/notifications",
-  verifyToken,
-  conductor,
-  getMyNotifications()
-);
+conductorRouter.get("/notifications", staffConductorDriver, getMyNotifications);
 // Trip history
-conductorRouter.get(
-  "/my-trip-history",
-  verifyToken,
-  conductor,
-  getMyTripHistory()
-);
+conductorRouter.get("/my-trip-history", staffConductorDriver, getMyTripHistory);
 // End trip / update status
 conductorRouter.put(
   "/trip/:tripId/status",
-  verifyToken,
-  conductor,
+  staffConductorDriver,
   updateTripStatus
 );
 

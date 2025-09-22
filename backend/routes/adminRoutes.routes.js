@@ -1,24 +1,26 @@
 import express from "express";
 
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+import { staffAdmin } from "../middlewares/protectedRoutes.js";
 import {
   createRoute,
   getAllRoutes,
   getRouteById,
   updateRoute,
   deleteRoute,
+  createUserByAdmin,
 } from "./../controllers/adminRoutes.controller.js";
 const adminRoutesRouter = express.Router();
 // All routes are protected and require admin access
 adminRoutesRouter
   .route("/")
-  .post(verifyToken, admin, createRoute)
-  .get(verifyToken, admin, getAllRoutes);
+  .post(staffAdmin, createRoute)
+  .post(staffAdmin, createUserByAdmin)
+  .get(staffAdmin, getAllRoutes);
 
 adminRoutesRouter
   .route("/:id")
-  .get(verifyToken, admin, getRouteById)
-  .put(verifyToken, admin, updateRoute)
-  .delete(verifyToken, admin, deleteRoute);
+  .get(staffAdmin, getRouteById)
+  .put(staffAdmin, updateRoute)
+  .delete(staffAdmin, deleteRoute);
 
 export default adminRoutesRouter;

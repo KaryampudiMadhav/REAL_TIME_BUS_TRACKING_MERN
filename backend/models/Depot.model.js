@@ -46,5 +46,5 @@ const depotSchema = new mongoose.Schema(
 // Create a 2dsphere index for geospatial queries (e.g., "find nearest depot").
 depotSchema.index({ location: "2dsphere" });
 
-const Depot = mongoose.model("Depot", depotSchema);
+const Depot = mongoose.models.Depot || mongoose.model("Depot", depotSchema);
 export default Depot;

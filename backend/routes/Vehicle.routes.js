@@ -5,16 +5,16 @@ import {
   updateVehicle,
   deleteVehicle,
 } from "../controllers/Vehicle.controller.js";
-import { verifyToken, admin } from "../middlewares/protectedRoutes.js";
+import { staffAdmin } from "../middlewares/protectedRoutes.js";
 const vehicleRouter = express.Router();
 vehicleRouter
   .route("/")
-  .post(verifyToken, admin, createVehicle)
-  .get(verifyToken, admin, getAllVehicles);
+  .post(staffAdmin, createVehicle)
+  .get(staffAdmin, getAllVehicles);
 
 vehicleRouter
   .route("/:id")
-  .put(verifyToken, admin, updateVehicle)
-  .delete(verifyToken, admin, deleteVehicle);
+  .put(staffAdmin, updateVehicle)
+  .delete(staffAdmin, deleteVehicle);
 
 export default vehicleRouter;

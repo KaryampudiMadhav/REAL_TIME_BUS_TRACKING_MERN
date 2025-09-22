@@ -4,6 +4,7 @@ import {
   WELCOME_EMAIL_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
+  TICKET_CONFIRMATION_TEMPLATE,
 } from "../mails/templates.js";
 
 export const sendVerificationEmail = async (email, verificationCode) => {
@@ -27,6 +28,7 @@ export const sendWelcomeEmail = async (email, name) => {
     let html = WELCOME_EMAIL_TEMPLATE;
     html = html.replace(/{name}/g, name);
     html = html.replace("{appLoginUrl}", process.env.CLIENT_URL);
+    html = html.replace("{imageUrl}", "../seeds/logo.png");
     await sendEmail({
       to: email,
       subject: `Welcome, ${name}!`,
@@ -62,5 +64,31 @@ export const sendPasswordResetSuccessEmail = async (email) => {
     });
   } catch (error) {
     console.error("Error sending password reset success email:", error);
+  }
+};
+
+export const sendBookingConfirmationEmail = async (email, bookingDetails) => {
+  try {
+    let html = TICKET_CONFIRMATION_TEMPLATE;
+
+    // Replace all placeholders with actual data
+    html = html.replace("{passengerName}", bookingDetails.passengerName);
+    html = html.replace("{routeName}", bookingDetails.routeName);
+    html = html.replace(
+      "{departureDateTime}",
+      bookingDetails.departureDateTime
+    );
+    html = html.replace("{seatNumbers}", bookingDetails.seatNumbers);
+    html = html.replace("{totalFare}", bookingDetails.totalFare);
+    html = html.replace("{bookingId}", bookingDetails.bookingId);
+    html = html.replace("{qrCodeUrl}", bookingDetails.qrCodeUrl);
+
+    await sendEmail({
+      to: email,
+      subject: `Booking Confirmed: ${bookingDetails.routeName}`,
+      html,
+    });
+  } catch (error) {
+    console.error("Error sending booking confirmation email:", error);
   }
 };
