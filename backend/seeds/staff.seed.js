@@ -7,7 +7,6 @@
 // const connectDB = async () => {
 //   try {
 //     const conn = await mongoose.connect(
-//       "mongodb+srv://karyampudimadhav_db_user:aYnPoEO5JoXvdjB6@busnext.g5d5ecd.mongodb.net/BUSNEXT?retryWrites=true&w=majority&appName=BusNext"
 //     );
 //     console.log(`MongoDB Connected: ${conn.connection.host}`);
 //   } catch (error) {
