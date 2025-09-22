@@ -13,8 +13,6 @@ const bookingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-
-    // --- FIELD TO TRACK THE CHANNEL ---
     booking_channel: {
       type: String,
       enum: ["ONLINE", "OFFLINE"],
@@ -24,6 +22,8 @@ const bookingSchema = new mongoose.Schema(
     seat_numbers: {
       type: [String],
       required: true,
+      default: [],
+      description: "Array of seat numbers booked for this trip.",
     },
     total_fare: {
       type: Number,

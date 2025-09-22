@@ -8,11 +8,13 @@ import {
   getMyTripHistory,
   updateTripStatus,
   sendSOSAlert,
+  verifyBookingQR,
 } from "../controllers/conductor.controller.js";
 
 const conductorRouter = express.Router();
 
 import { staffConductorDriver } from "./../middlewares/protectedRoutes.js";
+import { createOfflineBooking } from "./../controllers/conductor.controller";
 
 conductorRouter.post("/sos", staffConductorDriver, sendSOSAlert);
 // ... other driver routes
@@ -35,5 +37,14 @@ conductorRouter.put(
   staffConductorDriver,
   updateTripStatus
 );
+
+conductorRouter.post(
+  "/trip/:tripId/status",
+  staffConductorDriver,
+  verifyBookingQR
+);
+
+router.post("/bookings/offline", staffConductorDriver, createOfflineBooking);
+router.get("/verify-booking/:bookingId", staffConductorDriver, verifyBookingQR);
 
 export default conductorRouter;

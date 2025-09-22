@@ -46,6 +46,12 @@ const tripSchema = new mongoose.Schema(
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
     },
+    // Array of all reserved seat numbers for this trip
+    booked_seats: {
+      type: [String],
+      default: [],
+      description: "All seat numbers reserved for this trip.",
+    },
 
     // --- Real-Time Data (remain the same) ---
     live_location: {

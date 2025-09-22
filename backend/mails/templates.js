@@ -180,3 +180,47 @@ export const WELCOME_EMAIL_TEMPLATE = `
 </body>
 </html>
 `;
+export const REFUND_CONFIRMATION_TEMPLATE = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Refund Processed</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
+
+  <div style="background: linear-gradient(to right, #28a745, #218838); padding: 20px; text-align: center;">
+    <h1 style="color: white; margin: 0;">Refund Processed</h1>
+  </div>
+  
+  <div style="padding: 20px;">
+    <p style="font-size: 1.1em;">Hello <strong>{passengerName}</strong>,</p>
+    <p>We are writing to confirm that your booking has been cancelled and your refund has been processed successfully.</p>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Original Booking ID:</td>
+        <td style="padding: 10px;">{bookingId}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Route:</td>
+        <td style="padding: 10px;">{routeName}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Refund Amount:</td>
+        <td style="padding: 10px; font-weight: bold; color: #28a745;">₹{refundAmount}</td>
+      </tr>
+       <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 10px; font-weight: bold;">Refund Transaction ID:</td>
+        <td style="padding: 10px;">{refundId}</td>
+      </tr>
+    </table>
+
+    <p>Please note that it may take 5-7 business days for the amount to reflect in your original payment account, depending on your bank's processing times.</p>
+    <p>We are sorry to see you go and hope to see you travel with us again soon.</p>
+    <p>Best regards,<br>The Bus Tracking Team</p>
+  </div>
+  
+</body>
+</html>
+`;

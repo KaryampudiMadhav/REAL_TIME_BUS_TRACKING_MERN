@@ -10,7 +10,7 @@ import {
   createUserByAdmin,
 } from "./../controllers/adminRoutes.controller.js";
 const adminRoutesRouter = express.Router();
-// All routes are protected and require admin access
+
 adminRoutesRouter
   .route("/")
   .post(staffAdmin, createRoute)

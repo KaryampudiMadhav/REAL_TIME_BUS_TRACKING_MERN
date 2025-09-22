@@ -6,7 +6,7 @@ import {
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   TICKET_CONFIRMATION_TEMPLATE,
 } from "../mails/templates.js";
-
+import { REFUND_CONFIRMATION_TEMPLATE } from "../utils/emailTemplates.js";
 export const sendVerificationEmail = async (email, verificationCode) => {
   try {
     const html = VERIFICATION_EMAIL_TEMPLATE.replace(
@@ -90,5 +90,25 @@ export const sendBookingConfirmationEmail = async (email, bookingDetails) => {
     });
   } catch (error) {
     console.error("Error sending booking confirmation email:", error);
+  }
+};
+
+export const sendRefundEmail = async (email, refundDetails) => {
+  try {
+    let html = REFUND_CONFIRMATION_TEMPLATE;
+
+    html = html.replace("{passengerName}", refundDetails.passengerName);
+    html = html.replace("{bookingId}", refundDetails.bookingId);
+    html = html.replace("{routeName}", refundDetails.routeName);
+    html = html.replace("{refundAmount}", refundDetails.refundAmount);
+    html = html.replace("{refundId}", refundDetails.refundId);
+
+    await sendEmail({
+      to: email,
+      subject: `Refund Processed for Booking #${refundDetails.bookingId}`,
+      html,
+    });
+  } catch (error) {
+    console.error("Error sending refund email:", error);
   }
 };
