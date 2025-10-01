@@ -197,12 +197,15 @@ export const verifyEmail = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
-
+  console.log("forgot-password controller ", email);
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Email is required." });
+  }
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      // We send a success message even if the user isn't found
-      // This prevents people from checking if an email is registered.
       return res.status(200).json({
         success: true,
         message:
@@ -222,14 +225,15 @@ export const forgotPassword = async (req, res) => {
     await user.save();
 
     // 3. Create the reset URL with the original (un-hashed) token
-    const resetUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.APP_URL}/reset/${resetToken}`;
     console.log(resetUrl);
-    // 4. Send the email
     await sendPasswordResetEmail(user.email, resetUrl);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Password reset link sent." });
+    res.status(200).json({
+      success: true,
+      resetToken,
+      message: "Password reset link sent to your email.",
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error." });
@@ -238,7 +242,21 @@ export const forgotPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   const { token } = req.params;
-  const { password } = req.body;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "New password is required.",
+    });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters long.",
+    });
+  }
 
   try {
     // 1. Hash the incoming token from the URL
@@ -258,7 +276,7 @@ export const resetPassword = async (req, res) => {
 
     // 3. Set the new password (and hash it as per your preference)
     const salt = await bcryptjs.genSalt(12);
-    user.password = await bcryptjs.hash(password, salt);
+    user.password = await bcryptjs.hash(newPassword, salt);
 
     // 4. Clear the reset token fields
     user.passwordResetToken = undefined;
@@ -380,5 +398,69 @@ export const login = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+import Route from "../models/route.model.js";
+import Trip from "../models/trip.model.js";
+
+export const searchAvailableTrips = async (req, res) => {
+  try {
+    const { from, to, date } = req.query;
+
+    if (!from || !to || !date) {
+      return res.status(400).json({
+        message: "Source (from), destination (to), and date are required.",
+      });
+    }
+
+    // --- 1. Find all routes that contain BOTH stops in the correct order ---
+    const matchingRoutes = await Route.aggregate([
+      // Stage 1: Quickly find routes that contain both stop names (case-insensitive).
+      {
+        $match: {
+          "stops.name": { $all: [new RegExp(from, "i"), new RegExp(to, "i")] },
+        },
+      },
+      // Stage 2: Create fields with the array index of the 'from' and 'to' stops.
+      {
+        $addFields: {
+          startIndex: { $indexOfArray: ["$stops.name", new RegExp(from, "i")] },
+          endIndex: { $indexOfArray: ["$stops.name", new RegExp(to, "i")] },
+        },
+      },
+      // Stage 3: Keep only the routes where the 'from' stop appears BEFORE the 'to' stop.
+      {
+        $match: {
+          $expr: { $lt: ["$startIndex", "$endIndex"] },
+        },
+      },
+    ]);
+
+    if (matchingRoutes.length === 0) {
+      return res.status(200).json([]); // No routes found, return an empty array.
+    }
+
+    // --- 2. Find all available trips for those routes on the specified date ---
+    const routeIds = matchingRoutes.map((route) => route._id);
+
+    // Create a date range for the entire selected day
+    const searchDate = new Date(date);
+    const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));
+
+    const availableTrips = await Trip.find({
+      route_id: { $in: routeIds },
+      status: { $in: ["SCHEDULED", "DELAYED"] }, // Only show trips that can still be booked
+      departure_datetime: { $gte: startOfDay, $lte: endOfDay },
+    })
+      .sort({ departure_datetime: 1 }) // Show earliest trips first
+      .populate("vehicle_id", "bus_number service_type amenities total_seats")
+      .populate("route_id"); // Populate the full route details
+
+    res.status(200).json(availableTrips);
+  } catch (error) {
+    console.error("Advanced search error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

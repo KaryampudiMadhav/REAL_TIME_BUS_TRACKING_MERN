@@ -52,6 +52,21 @@ const tripSchema = new mongoose.Schema(
       default: [],
       description: "All seat numbers reserved for this trip.",
     },
+    // Temporary seat holds during booking process
+    held_seats: [
+      {
+        seat_numbers: [String],
+        user_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        expires_at: {
+          type: Date,
+          required: true,
+        },
+      },
+    ],
 
     // --- Real-Time Data (remain the same) ---
     live_location: {

@@ -12,11 +12,12 @@ import {
   sendPhoneOTP,
   verifyPhoneOTP,
   resendVerificationEmail,
+  searchAvailableTrips,
 } from "./../controllers/user.controller.js";
 
 export const routes = express.Router();
 
-routes.post("/checkauth", verifyToken, checkAuth);
+routes.get("/checkauth", verifyToken, checkAuth);
 routes.post("/signup", signUp);
 routes.post("/login", login);
 routes.post("/logout", Logout);
@@ -26,3 +27,4 @@ routes.post("/resend-verification", resendVerificationEmail);
 routes.post("/reset-password/:token", resetPassword);
 routes.post("/send-phone-otp", sendPhoneOTP);
 routes.post("/verify-phone-otp", verifyPhoneOTP);
+routes.get("/search", searchAvailableTrips);

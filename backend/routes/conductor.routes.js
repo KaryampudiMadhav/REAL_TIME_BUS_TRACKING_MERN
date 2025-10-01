@@ -14,7 +14,7 @@ import {
 const conductorRouter = express.Router();
 
 import { staffConductorDriver } from "./../middlewares/protectedRoutes.js";
-import { createOfflineBooking } from "./../controllers/conductor.controller";
+import { createOfflineBooking } from "./../controllers/conductor.controller.js";
 
 conductorRouter.post("/sos", staffConductorDriver, sendSOSAlert);
 // ... other driver routes
@@ -44,7 +44,15 @@ conductorRouter.post(
   verifyBookingQR
 );
 
-router.post("/bookings/offline", staffConductorDriver, createOfflineBooking);
-router.get("/verify-booking/:bookingId", staffConductorDriver, verifyBookingQR);
+conductorRouter.post(
+  "/bookings/offline",
+  staffConductorDriver,
+  createOfflineBooking
+);
+conductorRouter.get(
+  "/verify-booking/:bookingId",
+  staffConductorDriver,
+  verifyBookingQR
+);
 
 export default conductorRouter;

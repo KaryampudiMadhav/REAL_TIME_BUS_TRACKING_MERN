@@ -64,7 +64,6 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    // --- Security & Account Management ---
     passwordResetToken: {
       type: String,
       select: false,

@@ -48,6 +48,73 @@ export const initializeSocketIO = (io) => {
       );
     });
 
+    // Hold seats for 5 minutes during selection
+    socket.on("hold_seats", async ({ tripId, seatNumbers, userId }) => {
+      try {
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
+
+        // Add to in-memory seat locks
+        const lockKey = `${tripId}-${seatNumbers.join(",")}`;
+        seatLocks.set(lockKey, {
+          userId,
+          expiresAt,
+          seatNumbers,
+        });
+
+        // Broadcast to all users in the seat selection room
+        const roomName = `seat_selection_${tripId}`;
+        io.to(roomName).emit("seat_status_update", {
+          tripId,
+          heldSeats: Array.from(seatLocks.entries())
+            .filter(([key]) => key.startsWith(`${tripId}-`))
+            .map(([_, value]) => value.seatNumbers)
+            .flat(),
+        });
+
+        // Set a timeout to release seats after 5 minutes
+        setTimeout(() => {
+          if (seatLocks.has(lockKey)) {
+            seatLocks.delete(lockKey);
+            // Broadcast the release
+            io.to(roomName).emit("seat_status_update", {
+              tripId,
+              heldSeats: Array.from(seatLocks.entries())
+                .filter(([key]) => key.startsWith(`${tripId}-`))
+                .map(([_, value]) => value.seatNumbers)
+                .flat(),
+            });
+          }
+        }, 5 * 60 * 1000);
+      } catch (error) {
+        console.error("Error holding seats:", error);
+        socket.emit("seat_hold_error", {
+          message: "Failed to hold seats. Please try again.",
+        });
+      }
+    });
+
+    // Release seats manually (e.g., when user navigates away)
+    socket.on("release_seats", async ({ tripId, seatNumbers }) => {
+      try {
+        // Remove from in-memory seat locks
+        const lockKey = `${tripId}-${seatNumbers.join(",")}`;
+        seatLocks.delete(lockKey);
+
+        // Broadcast to all users in the seat selection room
+        const roomName = `seat_selection_${tripId}`;
+        io.to(roomName).emit("seat_status_update", {
+          tripId,
+          heldSeats: Array.from(seatLocks.entries())
+            .filter(([key]) => key.startsWith(`${tripId}-`))
+            .map(([_, value]) => value.seatNumbers)
+            .flat(),
+        });
+      } catch (error) {
+        console.error("Error releasing seats:", error);
+      }
+    });
+
     socket.on("lock_seat", ({ tripId, seatNumber }) => {
       const lockKey = `${tripId}-${seatNumber}`;
       if (!seatLocks.has(lockKey)) {

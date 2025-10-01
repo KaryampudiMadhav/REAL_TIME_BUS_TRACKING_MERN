@@ -5,8 +5,8 @@ import {
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   TICKET_CONFIRMATION_TEMPLATE,
+  REFUND_CONFIRMATION_TEMPLATE,
 } from "../mails/templates.js";
-import { REFUND_CONFIRMATION_TEMPLATE } from "../utils/emailTemplates.js";
 export const sendVerificationEmail = async (email, verificationCode) => {
   try {
     const html = VERIFICATION_EMAIL_TEMPLATE.replace(
