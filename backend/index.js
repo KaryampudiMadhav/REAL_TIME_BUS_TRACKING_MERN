@@ -42,6 +42,9 @@ const io = new Server(server, {
 app.set("socketio", io); // Make io accessible in routes
 SeatReleaseSystem(io);
 
+// Required for Render (or any proxy) to correctly identify client IPs
+app.set("trust proxy", 1);
+
 app.use(cors({
   origin: process.env.APP_URL || "http://localhost:5173",
   credentials: true, // Allow cookies to be sent
