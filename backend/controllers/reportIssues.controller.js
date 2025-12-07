@@ -44,7 +44,7 @@ export const getMyIssueReports = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-import IssueReport from "../models/issueReport.model.js";
+import IssueReport from "../models/IssueReport.model.js";
 
 export const getAllIssueReports = async (req, res) => {
   try {

@@ -15,7 +15,7 @@ import Trip from "../models/trip.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";
 import User from "../models/user.model.js";
-import IssueReport from "../models/issueReport.model.js";
+import IssueReport from "../models/IssueReport.model.js";
 import Notification from "../models/notification.model.js";
 
 // 1. Dashboard overview

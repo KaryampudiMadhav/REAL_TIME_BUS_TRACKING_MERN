@@ -3,7 +3,7 @@ import Trip from "../models/trip.model.js";
 import Route from "../models/route.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";
-import IssueReport from "../models/issueReport.model.js";
+import IssueReport from "../models/IssueReport.model.js";
 
 // Record overcrowding event for a trip
 export const recordOvercrowding = async (req, res) => {

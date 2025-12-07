@@ -3,7 +3,7 @@ import Trip from "../models/trip.model.js";
 import Ticket from "../models/ticket.model.js";
 import Notification from "../models/notification.model.js";
 import Staff from "../models/staff.model.js";
-import IssueReport from "../models/issueReport.model.js";
+import IssueReport from "../models/IssueReport.model.js";
 import Booking from "../models/booking.model.js";
 
 export const sendSOSAlert = async (req, res) => {
