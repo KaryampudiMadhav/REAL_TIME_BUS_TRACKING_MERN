@@ -35,9 +35,32 @@ AlertSystem();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [process.env.APP_URL, "http://localhost:5173", process.env.APP_URL?.replace(/\/$/, "")].filter(Boolean),
+    origin: (origin, callback) => {
+      const allowedOrigin = process.env.APP_URL;
+      if (!origin) return callback(null, true);
+
+      // Normalize origins for comparison
+      const normalize = (url) => url ? url.replace(/\/$/, "") : "";
+      const normalizedOrigin = normalize(origin);
+      const normalizedAllowed = normalize(allowedOrigin);
+
+      // Allow:
+      // 1. Exact match with APP_URL
+      // 2. Localhost (dev)
+      // 3. Any Vercel preview deployment
+      if (
+        normalizedOrigin === normalizedAllowed ||
+        normalizedOrigin === "http://localhost:5173" ||
+        normalizedOrigin.endsWith(".vercel.app")
+      ) {
+        callback(null, true);
+      } else {
+        console.log("Blocked by CORS. Origin:", origin, "Allowed:", allowedOrigin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Important for cookies in socket handshake if needed
+    credentials: true,
   },
 });
 app.set("socketio", io); // Make io accessible in routes
@@ -46,16 +69,24 @@ SeatReleaseSystem(io);
 // Required for Render (or any proxy) to correctly identify client IPs
 app.set("trust proxy", 1);
 
+// Debug Logging for Env
+console.log("Server Startup - APP_URL:", process.env.APP_URL);
+
 // Robust CORS with trailing slash handling
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigin = process.env.APP_URL;
     if (!origin) return callback(null, true);
 
-    // Normalize origins by removing trailing slashes for comparison
     const normalize = (url) => url ? url.replace(/\/$/, "") : "";
+    const normalizedOrigin = normalize(origin);
+    const normalizedAllowed = normalize(allowedOrigin);
 
-    if (normalize(origin) === normalize(allowedOrigin) || normalize(origin) === "http://localhost:5173") {
+    if (
+      normalizedOrigin === normalizedAllowed ||
+      normalizedOrigin === "http://localhost:5173" ||
+      normalizedOrigin.endsWith(".vercel.app")
+    ) {
       callback(null, true);
     } else {
       console.log("Blocked by CORS. Origin:", origin, "Allowed:", allowedOrigin);
