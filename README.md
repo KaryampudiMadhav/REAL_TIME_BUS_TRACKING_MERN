@@ -1,7 +1,5 @@
 # BusTracker Pro
 
-![BusTracker Pro Banner](C:/Users/dell/.gemini/antigravity/brain/9f7be3ba-0dfc-4f21-8e68-be3512de681f/bus_tracker_banner_1765105519942.png)
-
 > **A Next-Generation Real-Time Bus Tracking & Booking System**
 
 **BusTracker Pro** is a comprehensive solution designed to modernize the public transport experience. It bridges the gap between passengers, conductors, and administrators with a seamless, real-time platform.
@@ -87,24 +85,17 @@ VITE_SERVER_URL=http://localhost:7000
 
 ## 🚀 Deployment Guide
 
-### Frontend (Vercel/Netlify)
+### Frontend (Vercel)
 1.  Navigate to `frontend`.
 2.  Run `npm run build` to generate the `dist` folder.
 3.  Deploy the `dist` folder to your hosting provider.
 
-### Backend (Render/Heroku/Railway)
+### Backend (Render)
 1.  Connect your repository.
 2.  Set the Root Directory to `backend` (or ensure the start script points there).
 3.  Add your Environment Variables in the provider's dashboard.
 4.  Command: `npm start`.
 
----
-
-## 📸 Screenshots
-
-*(Add screenshots of your Dashboard, Live Tracking, and Booking pages here)*
-
----
 
 ## 📄 License
 This project is licensed under the MIT License.
