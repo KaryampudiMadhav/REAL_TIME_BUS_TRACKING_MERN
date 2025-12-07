@@ -5,7 +5,8 @@
   "main": "backend/index.js",
   "scripts": {
     "dev": "nodemon backend/index.js",
-    "start": "node backend/index.js"
+    "start": "node backend/index.js",
+    "build": "echo 'Backend does not require build. For frontend, run build inside frontend directory.'"
   },
   "keywords": [],
   "author": "",

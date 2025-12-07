@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import Trip from "../models/trip.model.js";
-import Depot from "../models/depot.model.js";
-import IssueReport from "../models/issueReport.model.js";
+import Depot from "../models/Depot.model.js";
+import IssueReport from "../models/IssueReport.model.js";
 
 export const AlertSystem = () => {
   cron.schedule("*/10 * * * *", async () => {
@@ -40,9 +40,8 @@ export const AlertSystem = () => {
             trip_id: trip._id,
             reported_by_staff_id: null, // System-generated, no staff
             issue_type: "BREAKDOWN",
-            message: `Bus stalled for over 30 minutes. Nearest depot: ${
-              nearestDepot?.name || "Unknown"
-            }.`,
+            message: `Bus stalled for over 30 minutes. Nearest depot: ${nearestDepot?.name || "Unknown"
+              }.`,
             status: "NEW",
           });
           console.log(

@@ -412,3 +412,5 @@
 {"level":"info","message":"Server running on port 7000","service":"bus-tracking-backend","timestamp":"2025-12-07T10:42:59.737Z"}
 {"level":"info","message":"Server running on port 7000","service":"bus-tracking-backend","timestamp":"2025-12-07T10:44:02.762Z"}
 {"level":"info","message":"Server running on port 7000","service":"bus-tracking-backend","timestamp":"2025-12-07T10:50:51.303Z"}
+{"level":"info","message":"Server running on port 7000","service":"bus-tracking-backend","timestamp":"2025-12-07T11:06:32.933Z"}
+{"level":"info","message":"Server running on port 7000","service":"bus-tracking-backend","timestamp":"2025-12-07T11:12:39.454Z"}
