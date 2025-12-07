@@ -328,7 +328,11 @@ export const checkAuth = async (req, res) => {
 };
 
 export const Logout = async (req, res) => {
-  res.clearCookie("jwt");
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  });
   res
     .status(200)
     .json({ success: true, message: "User Logged Out Successfully." });
@@ -489,8 +493,23 @@ export const getPopularRoutes = async (req, res) => {
         const price = Math.round(trip.route_id.distance_km * 2.5);
 
         // Format duration
-        const hours = Math.floor(trip.route_id.duration_minutes / 60);
-        const mins = trip.route_id.duration_minutes % 60;
+        // Format duration
+        let durationMins = trip.route_id.duration_minutes;
+
+        // Fallback: Calculate from stops if available
+        if (!durationMins && trip.route_id.stops && trip.route_id.stops.length > 0) {
+          const firstStop = trip.route_id.stops[0];
+          const lastStop = trip.route_id.stops[trip.route_id.stops.length - 1];
+          durationMins = lastStop.arrival_offset_mins - firstStop.departure_offset_mins;
+        }
+
+        // Fallback: Estimate from distance (avg speed 60km/h)
+        if (!durationMins && trip.route_id.distance_km) {
+          durationMins = Math.round((trip.route_id.distance_km / 60) * 60);
+        }
+
+        const hours = Math.floor((durationMins || 0) / 60);
+        const mins = (durationMins || 0) % 60;
         const durationStr = `${hours}h ${mins}m`;
 
         uniqueRoutesMap.set(key, {

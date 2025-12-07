@@ -154,8 +154,8 @@ export const staffWorkerLogin = async (req, res) => {
 export const staffLogout = async (req, res) => {
   res.clearCookie("staffjwt", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    secure: true,
+    sameSite: "None",
   });
   res.clearCookie("jwt"); // Clear user token if present too, just to be safe
   res

@@ -6,8 +6,8 @@ export const generateTokenAndSetCookies = async (res, userId, userRole) => {
 
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: true, // Always true for SameSite: None
+    sameSite: "None",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 

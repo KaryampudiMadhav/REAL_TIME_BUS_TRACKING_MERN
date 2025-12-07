@@ -125,6 +125,8 @@ export const staffMunicipal = async (req, res, next) => {
 
 export const verifyToken = async (req, res, next) => {
   const token = req.cookies.jwt;
+  console.log("verifyToken Middleware - Cookies:", req.cookies);
+  console.log("verifyToken Middleware - Headers:", req.headers);
   if (!token) {
     return res
       .status(401)
