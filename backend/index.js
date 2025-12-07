@@ -52,6 +52,12 @@ app.use(cookieParser());
 
 // Apply rate limiting to all API routes
 app.use("/api/", apiLimiter);
+
+// Health Check Route
+app.get("/", (req, res) => {
+  res.send("Bus Tracking API is running successfully!");
+});
+
 app.use("/api/auth", routes);
 app.use("/api/admin-routes", adminRoutesRouter);
 app.use("/api/admin-dashboard", adminDashboardRouter);
