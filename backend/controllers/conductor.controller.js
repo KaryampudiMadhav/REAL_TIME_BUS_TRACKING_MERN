@@ -127,6 +127,19 @@ export const createIssueReport = async (req, res) => {
       return res.status(404).json({ message: "Staff profile not found." });
     }
 
+    // Prevent duplicate breakdown reports
+    if (issue_type === "breakdown") {
+      const existingIssue = await IssueReport.findOne({
+        trip_id,
+        issue_type: "breakdown",
+      });
+      if (existingIssue) {
+        return res
+          .status(400)
+          .json({ message: "A breakdown has already been reported for this trip." });
+      }
+    }
+
     const report = await IssueReport.create({
       trip_id,
       reported_by_staff_id: staffProfile._id,

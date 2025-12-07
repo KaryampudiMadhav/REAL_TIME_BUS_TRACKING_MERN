@@ -283,7 +283,13 @@ const LiveTracking = () => {
                 {/* --- NEW: ALERT BANNER FOR ISSUES --- */}
                 {tripData && tripData.issues && tripData.issues.length > 0 && (
                   <div className="mb-4 space-y-2">
-                    {tripData.issues.map((issue, idx) => (
+                    {/* Deduplicate issues by type: show only the latest of each type */}
+                    {Object.values(
+                      tripData.issues.reduce((acc, issue) => {
+                        acc[issue.issue_type] = issue;
+                        return acc;
+                      }, {})
+                    ).map((issue, idx) => (
                       <div key={idx} className={`border rounded-lg p-3 flex items-start gap-3 ${issue.is_verified ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200 animate-pulse'}`}>
                         <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${issue.is_verified ? 'text-red-600' : 'text-yellow-600'}`} />
                         <div className="flex-1">

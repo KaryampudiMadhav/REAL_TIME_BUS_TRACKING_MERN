@@ -169,6 +169,12 @@ export const createOnlineBooking = async (req, res) => {
 
     // NEW: Validate Passengers Array
     if (!passengers || !Array.isArray(passengers) || passengers.length !== numItemsToBook) {
+      console.error("Passenger Validation Failed:", {
+        receivedPassengers: passengers,
+        expectedCount: numItemsToBook,
+        ticketCount: ticketCount,
+        seatNumbers: seat_numbers
+      });
       // Fallback for backward compatibility or if frontend sends incomplete data
       // Ideally, return error, but for now let's be strict as per requirement
       return res.status(400).json({ error: `Please provide details for all ${numItemsToBook} passengers.` });

@@ -154,7 +154,7 @@ const ConductorDashboard = () => {
             setIssueForm({ type: "", description: "" });
         } catch (error) {
             console.error("Issue report error:", error);
-            toast.error("Failed to report issue");
+            toast.error(error.response?.data?.message || "Failed to report issue");
         }
     };
 
