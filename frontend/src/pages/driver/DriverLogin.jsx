@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bus, User, Lock, Eye, EyeOff } from "lucide-react";
+import { useStaffStore } from "../../store/useStaffStore";
+import toast from "react-hot-toast";
 
 const DriverLogin = () => {
   const navigate = useNavigate();
-
-  const loginSuccess = (userData) => {
-    console.log("Login successful:", userData);
-    // Add login logic here later
-  };
+  const { staffLogin, loading: storeLoading } = useStaffStore();
   const [credentials, setCredentials] = useState({
     employeeId: "",
     password: "",
@@ -16,43 +14,33 @@ const DriverLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock login - in real app, this would call an API
-    setTimeout(() => {
-      if (
-        credentials.employeeId === "D001" &&
-        credentials.password === "driver123"
-      ) {
-        const user = {
-          id: "1",
-          name: "Rajesh Kumar",
-          email: "rajesh@transport.gov",
-          role: "driver",
-        };
-        loginSuccess(user);
-        navigate("/driver/dashboard");
-      } else {
-        alert("Invalid credentials");
-      }
-      setLoading(false);
-    }, 1000);
+    const result = await staffLogin(credentials, "DRIVER");
+
+    if (result.success) {
+      toast.success("Login successful!");
+      navigate("/driver/dashboard");
+    } else {
+      toast.error(result.error);
+    }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
             <Bus className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Driver Portal
           </h1>
-          <p className="text-gray-600">Sign in to access your dashboard</p>
+          <p className="text-gray-600">Sign in to manage your trips</p>
         </div>
 
         {/* Login Form */}
@@ -73,7 +61,7 @@ const DriverLogin = () => {
                       employeeId: e.target.value,
                     }))
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your employee ID"
                   required
                 />
@@ -95,7 +83,7 @@ const DriverLogin = () => {
                       password: e.target.value,
                     }))
                   }
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your password"
                   required
                 />
@@ -115,28 +103,16 @@ const DriverLogin = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              disabled={loading || storeLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
-              {loading ? (
+              {loading || storeLoading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : (
                 "Sign In"
               )}
             </button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm font-medium text-gray-700 mb-2">
-              Demo Credentials:
-            </p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>
-                <span className="font-medium">Driver:</span> D001 / driver123 (or EMP001 / password123 for real DB)
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

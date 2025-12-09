@@ -291,16 +291,35 @@ export const updateTripStatus = async (req, res) => {
     const trip = await Trip.findById(req.params.id);
 
     if (trip) {
-      trip.status = status;
-      await trip.save();
+      if (status === "IN_TRANSIT" && trip.status === "SCHEDULED") {
+        // Start Trip
+        trip.status = "IN_TRANSIT";
+        trip.actual_departure_time = new Date();
+        await Vehicle.findByIdAndUpdate(trip.vehicle_id, { status: "ON_TRIP" });
+        // Mark staff as on duty if not already
+        if (trip.driver_id) await Staff.findByIdAndUpdate(trip.driver_id, { is_on_duty: true });
+        if (trip.conductor_id) await Staff.findByIdAndUpdate(trip.conductor_id, { is_on_duty: true });
 
-      // If trip is cancelled or completed, make the vehicle available again
-      if (status === "CANCELLED" || status === "COMPLETED") {
-        await Vehicle.findByIdAndUpdate(trip.vehicle_id, {
-          status: "AVAILABLE",
-        });
+      } else if (status === "COMPLETED" && trip.status === "IN_TRANSIT") {
+        // End Trip
+        trip.status = "COMPLETED";
+        trip.actual_arrival_time = new Date();
+        await Vehicle.findByIdAndUpdate(trip.vehicle_id, { status: "AVAILABLE" });
+        // Mark staff as off duty
+        if (trip.driver_id) await Staff.findByIdAndUpdate(trip.driver_id, { is_on_duty: false });
+        if (trip.conductor_id) await Staff.findByIdAndUpdate(trip.conductor_id, { is_on_duty: false });
+
+      } else if (status === "CANCELLED") {
+        trip.status = "CANCELLED";
+        await Vehicle.findByIdAndUpdate(trip.vehicle_id, { status: "AVAILABLE" });
+        if (trip.driver_id) await Staff.findByIdAndUpdate(trip.driver_id, { is_on_duty: false });
+        if (trip.conductor_id) await Staff.findByIdAndUpdate(trip.conductor_id, { is_on_duty: false });
+
+      } else {
+        trip.status = status;
       }
 
+      await trip.save();
       res.status(200).json(trip);
     } else {
       res.status(404).json({ message: "Trip not found" });
@@ -312,13 +331,56 @@ export const updateTripStatus = async (req, res) => {
   }
 };
 
+export const respondToAssignment = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { status, role } = req.body; // status: ACCEPTED/REJECTED, role: DRIVER/CONDUCTOR
+
+    // req.staffId is populated by auth middleware
+    const staffId = req.staffId;
+
+    const trip = await Trip.findById(tripId);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
+
+    if (role === 'DRIVER') {
+      if (trip.driver_id.toString() !== staffId) {
+        return res.status(403).json({ message: "Not authorized for this trip assignment" });
+      }
+      trip.driver_status = status;
+    } else if (role === 'CONDUCTOR') {
+      if (trip.conductor_id.toString() !== staffId) {
+        return res.status(403).json({ message: "Not authorized for this trip assignment" });
+      }
+      trip.conductor_status = status;
+    } else {
+      return res.status(400).json({ message: "Invalid role specified" });
+    }
+
+    await trip.save();
+    res.status(200).json({ message: `Assignment ${status}`, trip });
+
+  } catch (error) {
+    console.error("Assignment response error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 export const getTripById = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id)
       .populate("route_id")
       .populate("vehicle_id")
-      .populate("driver_id", "employee_id work_contact_number") // Only populate Staff fields
-      .populate("conductor_id", "employee_id work_contact_number");
+      .populate("driver_id", "employee_id work_contact_number user_id") // Populate user_id for names
+      .populate("conductor_id", "employee_id work_contact_number user_id")
+      .populate({
+        path: 'driver_id',
+        populate: { path: 'user_id', select: 'fullName' }
+      })
+      .populate({
+        path: 'conductor_id',
+        populate: { path: 'user_id', select: 'fullName' }
+      });
+
 
     if (trip) {
       // Fetch active issues for this trip

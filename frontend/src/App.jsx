@@ -14,6 +14,8 @@ import ProfilePage from "./pages/passenger/ProfilePage";
 
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import DriverLogin from "./pages/driver/DriverLogin";
+import DriverDashboard from "./pages/driver/DriverDashboard";
 import ConductorDashboard from "./pages/conductor/ConductorDashboard";
 import ConductorLogin from "./pages/conductor/ConductorLogin";
 import AdminRoutes from "./pages/admin/AdminRoutes";
@@ -37,6 +39,7 @@ import ResetPasswordPage from "./pages/passenger/resetPassword.jsx";
 import { useEffect } from "react";
 import AuthForm from "./pages/passenger/SignUpPage";
 import RequireStaffAuth from "./components/RequireStaffAuth";
+import AdminLayout from "./layouts/AdminLayout";
 
 import { useLocation } from "react-router-dom";
 
@@ -104,6 +107,13 @@ function App() {
 
 
 
+          <Route path="/driver/login" element={<DriverLogin />} />
+          <Route path="/driver/dashboard" element={
+            <RequireStaffAuth allowedRoles={["DRIVER"]}>
+              <DriverDashboard />
+            </RequireStaffAuth>
+          } />
+
           <Route path="/conductor/login" element={<ConductorLogin />} />
           <Route path="/conductor/dashboard" element={
             <RequireStaffAuth allowedRoles={["CONDUCTOR"]}>
@@ -112,36 +122,14 @@ function App() {
           } />
 
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={
-            <RequireStaffAuth allowedRoles={["ADMIN"]}>
-              <AdminDashboard />
-            </RequireStaffAuth>
-          } />
-          <Route path="/admin/routes" element={
-            <RequireStaffAuth allowedRoles={["ADMIN"]}>
-              <AdminRoutes />
-            </RequireStaffAuth>
-          } />
-          <Route path="/admin/vehicles" element={
-            <RequireStaffAuth allowedRoles={["ADMIN"]}>
-              <AdminVehicles />
-            </RequireStaffAuth>
-          } />
-          <Route path="/admin/staff" element={
-            <RequireStaffAuth allowedRoles={["ADMIN"]}>
-              <AdminStaff />
-            </RequireStaffAuth>
-          } />
-          <Route path="/admin/trips" element={
-            <RequireStaffAuth allowedRoles={["ADMIN"]}>
-              <AdminTrips />
-            </RequireStaffAuth>
-          } />
-          <Route path="/admin/issues" element={
-            <RequireStaffAuth allowedRoles={["ADMIN"]}>
-              <AdminIssues />
-            </RequireStaffAuth>
-          } />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="routes" element={<AdminRoutes />} />
+            <Route path="vehicles" element={<AdminVehicles />} />
+            <Route path="staff" element={<AdminStaff />} />
+            <Route path="trips" element={<AdminTrips />} />
+            <Route path="issues" element={<AdminIssues />} />
+          </Route>
 
           <Route path="/municipal/login" element={<MunicipalLogin />} />
           <Route path="/municipal/dashboard" element={

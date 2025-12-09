@@ -10,6 +10,7 @@ import {
   sendSOSAlert,
   verifyBookingQR,
 } from "../controllers/conductor.controller.js";
+import { respondToAssignment } from "../controllers/trip.controller.js";
 
 const conductorRouter = express.Router();
 
@@ -53,6 +54,14 @@ conductorRouter.get(
   "/verify-booking/:bookingId",
   staffConductorDriver,
   verifyBookingQR
+);
+
+// verifyBookingQR removed
+
+conductorRouter.put(
+  "/trip/:tripId/assignment",
+  staffConductorDriver,
+  respondToAssignment
 );
 
 export default conductorRouter;

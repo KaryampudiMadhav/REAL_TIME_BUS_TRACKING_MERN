@@ -557,6 +557,10 @@ const ConductorDashboard = () => {
                                                                 <span className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full ${trip.status === "SCHEDULED" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
                                                                     {trip.status}
                                                                 </span>
+                                                                <span className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full ${trip.conductor_status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                                                                    trip.conductor_status === "ACCEPTED" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                                    Assignment: {trip.conductor_status}
+                                                                </span>
                                                                 <h3 className="text-xl font-bold text-gray-900">{trip.route_id?.routeName || 'Unnamed Route'}</h3>
                                                             </div>
 
@@ -576,14 +580,45 @@ const ConductorDashboard = () => {
                                                             </div>
                                                         </div>
 
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.05 }}
-                                                            whileTap={{ scale: 0.95 }}
-                                                            onClick={() => startTripManagement(trip)}
-                                                            className="mt-6 md:mt-0 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all"
-                                                        >
-                                                            Manage
-                                                        </motion.button>
+                                                        {trip.conductor_status === 'PENDING' ? (
+                                                            <div className="flex items-center gap-3 mt-6 md:mt-0">
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            await axiosInstance.put(`/conductor/trip/${trip._id}/assignment`, { status: "ACCEPTED", role: 'CONDUCTOR' });
+                                                                            toast.success("Assignment Accepted");
+                                                                            fetchMyTrips();
+                                                                        } catch (e) { toast.error("Failed to accept"); }
+                                                                    }}
+                                                                    className="px-6 py-3 bg-green-600 text-white rounded-2xl font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-200"
+                                                                >
+                                                                    Accept
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            await axiosInstance.put(`/conductor/trip/${trip._id}/assignment`, { status: "REJECTED", role: 'CONDUCTOR' });
+                                                                            toast.success("Assignment Rejected");
+                                                                            fetchMyTrips();
+                                                                        } catch (e) { toast.error("Failed to reject"); }
+                                                                    }}
+                                                                    className="px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition-all border border-red-100"
+                                                                >
+                                                                    Reject
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            trip.conductor_status === 'ACCEPTED' && (
+                                                                <motion.button
+                                                                    whileHover={{ scale: 1.05 }}
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    onClick={() => startTripManagement(trip)}
+                                                                    className="mt-6 md:mt-0 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all"
+                                                                >
+                                                                    Manage
+                                                                </motion.button>
+                                                            )
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             ))

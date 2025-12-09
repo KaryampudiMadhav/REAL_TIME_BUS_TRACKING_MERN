@@ -27,6 +27,18 @@ const tripSchema = new mongoose.Schema(
     },
     conductor_id: { type: mongoose.Schema.Types.ObjectId, ref: "Staff" },
 
+    // --- STAFF STATUS ---
+    driver_status: {
+      type: String,
+      enum: ["PENDING", "ACCEPTED", "REJECTED"],
+      default: "PENDING"
+    },
+    conductor_status: {
+      type: String,
+      enum: ["PENDING", "ACCEPTED", "REJECTED"],
+      default: "PENDING"
+    },
+
     // --- Trip Schedule & Status (remain the same) ---
     departure_datetime: { type: Date, required: true },
     arrival_datetime: { type: Date },

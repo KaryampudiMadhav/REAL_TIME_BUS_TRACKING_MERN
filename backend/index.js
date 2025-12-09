@@ -25,6 +25,7 @@ import { AlertSystem } from "./jobs/alertSystem.jobs.js";
 import { SeatReleaseSystem } from "./jobs/seatRelease.jobs.js";
 import bookingRouter from "./routes/booking.routes.js";
 import passengerRouter from "./routes/passenger.routes.js";
+import driverRouter from "./routes/driver.routes.js";
 
 dotenv.config();
 const app = express();
@@ -130,6 +131,7 @@ app.use("/api/estimatedtime", orsmRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/bookings", bookingRouter);
 app.use("/api/passenger/trips", passengerRouter); // New Public Route
+app.use("/api/driver", driverRouter);
 
 initializeSocketIO(io);
 
