@@ -212,7 +212,8 @@ const AdminTrips = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     key={trip._id}
-                    className="hover:bg-purple-50/50 transition-colors group"
+                    onClick={() => handleEdit(trip)} // Row click to edit
+                    className="hover:bg-purple-50/50 transition-colors group cursor-pointer"
                   >
                     <td className="px-8 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-4">
@@ -256,8 +257,8 @@ const AdminTrips = () => {
                       <div className="text-xs space-y-2">
                         <div className="flex items-center gap-2">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${trip.driver_status === 'ACCEPTED' ? "bg-green-100 text-green-700" :
-                              trip.driver_status === 'REJECTED' ? "bg-red-100 text-red-700" :
-                                "bg-indigo-100 text-indigo-700"
+                            trip.driver_status === 'REJECTED' ? "bg-red-100 text-red-700" :
+                              "bg-indigo-100 text-indigo-700"
                             }`} title={`Driver: ${trip.driver_status}`}>
                             D
                           </div>
@@ -265,8 +266,8 @@ const AdminTrips = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${trip.conductor_status === 'ACCEPTED' ? "bg-green-100 text-green-700" :
-                              trip.conductor_status === 'REJECTED' ? "bg-red-100 text-red-700" :
-                                "bg-pink-100 text-pink-700"
+                            trip.conductor_status === 'REJECTED' ? "bg-red-100 text-red-700" :
+                              "bg-pink-100 text-pink-700"
                             }`} title={`Conductor: ${trip.conductor_status}`}>
                             C
                           </div>
@@ -282,7 +283,7 @@ const AdminTrips = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => handleEdit(trip)} // Edit Trigger
+                        onClick={(e) => { e.stopPropagation(); handleEdit(trip); }} // Stop propagation
                         className="text-gray-400 hover:text-blue-600 transition-colors bg-white p-2 rounded-lg border border-gray-100 hover:border-blue-200 shadow-sm"
                         title="Edit Assignment"
                       >
