@@ -9,10 +9,6 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  LogOut,
-  LayoutDashboard,
-  LogOut,
-  LayoutDashboard,
   Menu,
   X,
 } from "lucide-react";
