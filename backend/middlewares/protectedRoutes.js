@@ -125,14 +125,17 @@ export const staffMunicipal = async (req, res, next) => {
 
 export const verifyToken = async (req, res, next) => {
   const token = req.cookies.jwt;
-  console.log("verifyToken Middleware - Cookies:", req.cookies);
-  console.log("verifyToken Middleware - Headers:", req.headers);
+  // console.log("verifyToken Middleware - Cookies:", req.cookies); // Reduce log noise
   if (!token) {
     return res
       .status(401)
       .json({ success: false, message: "Unauthorized - no token provided" });
   }
   try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res
@@ -152,6 +155,11 @@ export const verifyToken = async (req, res, next) => {
     next();
   } catch (error) {
     console.log("Error in verifyToken middleware: ", error.message);
-    return res.status(500).json({ success: false, message: "Server error" });
+
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: "Unauthorized - invalid or expired token" });
+    }
+
+    return res.status(500).json({ success: false, message: "Server error during authentication" });
   }
 };
