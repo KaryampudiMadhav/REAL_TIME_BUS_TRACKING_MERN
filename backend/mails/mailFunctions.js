@@ -81,12 +81,19 @@ export const sendBookingConfirmationEmail = async (email, bookingDetails) => {
     html = html.replace("{seatNumbers}", bookingDetails.seatNumbers);
     html = html.replace("{totalFare}", bookingDetails.totalFare);
     html = html.replace("{bookingId}", bookingDetails.bookingId);
-    html = html.replace("{qrCodeUrl}", bookingDetails.qrCodeUrl);
+    // html = html.replace("{qrCodeUrl}", bookingDetails.qrCodeUrl); // Removed: Using CID attachment instead
 
     await sendEmail({
       to: email,
       subject: `Booking Confirmed: ${bookingDetails.routeName}`,
       html,
+      attachments: [
+        {
+          filename: 'qrcode.png',
+          path: bookingDetails.qrCodeUrl, // Nodemailer supports data URI in 'path'
+          cid: 'qrcode' // Same as in the template
+        }
+      ]
     });
   } catch (error) {
     console.error("Error sending booking confirmation email:", error);

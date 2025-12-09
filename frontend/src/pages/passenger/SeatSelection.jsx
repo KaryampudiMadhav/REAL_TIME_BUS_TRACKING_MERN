@@ -119,6 +119,13 @@ const SeatSelection = () => {
         passengers: passengers, // Send array of passengers
       };
 
+      console.log("Booking Payload:", bookingData); // Debug log
+
+      if (!isTicketBooking && passengers.length !== selectedSeats.length) {
+        toast.error(`Please provide details for all ${selectedSeats.length} passengers.`);
+        return;
+      }
+
       // Call API
       const response = await axiosInstance.post("/bookings", bookingData);
 

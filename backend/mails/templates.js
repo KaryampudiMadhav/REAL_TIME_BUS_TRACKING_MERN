@@ -40,7 +40,7 @@ export const TICKET_CONFIRMATION_TEMPLATE = `
 
     <div style="text-align: center; margin: 30px 0;">
         <p style="margin-bottom: 10px;">Show this QR code to the conductor:</p>
-        <img src="{qrCodeUrl}" alt="Booking QR Code" style="width: 150px; height: 150px;">
+        <img src="cid:qrcode" alt="Booking QR Code" style="width: 150px; height: 150px;">
     </div>
     
     <p>We wish you a safe and pleasant journey!</p>

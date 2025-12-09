@@ -17,7 +17,13 @@ const SearchResults = () => {
   const navigate = useNavigate();
   const searchParams = location.state;
 
-  const { buses, loading } = useUserStore();
+  const { buses, loading, searchBuses } = useUserStore();
+
+  useEffect(() => {
+    if (buses.length === 0 && searchParams?.from && searchParams?.date) {
+      searchBuses(searchParams.from, searchParams.to || "", searchParams.date);
+    }
+  }, [buses.length, searchParams, searchBuses]);
 
   const [filters, setFilters] = useState({
     serviceType: "",

@@ -26,6 +26,7 @@ const sendEmail = async (options) => {
     to: options.to,
     subject: options.subject,
     html: options.html,
+    attachments: options.attachments, // Support for attachments (e.g. CID images)
   };
 
   // 4. Send the email

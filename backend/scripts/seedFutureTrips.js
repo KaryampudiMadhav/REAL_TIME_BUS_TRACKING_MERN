@@ -5,7 +5,13 @@ import Route from "../models/route.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Staff from "../models/staff.model.js";
 
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const seedFutureTrips = async () => {
     try {

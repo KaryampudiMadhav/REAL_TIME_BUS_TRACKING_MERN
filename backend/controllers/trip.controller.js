@@ -370,15 +370,13 @@ export const getTripById = async (req, res) => {
     const trip = await Trip.findById(req.params.id)
       .populate("route_id")
       .populate("vehicle_id")
-      .populate("driver_id", "employee_id work_contact_number user_id") // Populate user_id for names
-      .populate("conductor_id", "employee_id work_contact_number user_id")
       .populate({
-        path: 'driver_id',
-        populate: { path: 'user_id', select: 'fullName' }
+        path: "driver_id",
+        select: "employee_id work_contact_number",
       })
       .populate({
-        path: 'conductor_id',
-        populate: { path: 'user_id', select: 'fullName' }
+        path: "conductor_id",
+        select: "employee_id work_contact_number",
       });
 
 

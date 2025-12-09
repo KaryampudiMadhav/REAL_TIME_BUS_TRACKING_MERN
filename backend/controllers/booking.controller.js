@@ -173,10 +173,9 @@ export const createOnlineBooking = async (req, res) => {
         receivedPassengers: passengers,
         expectedCount: numItemsToBook,
         ticketCount: ticketCount,
-        seatNumbers: seat_numbers
+        seatNumbers: seat_numbers,
+        serviceType: serviceType
       });
-      // Fallback for backward compatibility or if frontend sends incomplete data
-      // Ideally, return error, but for now let's be strict as per requirement
       return res.status(400).json({ error: `Please provide details for all ${numItemsToBook} passengers.` });
     }
 
@@ -254,6 +253,10 @@ export const createOnlineBooking = async (req, res) => {
       bookingId: newBooking._id.toString(),
       qrCodeUrl: newBooking.qr_code_data,
     };
+
+    console.log("Sending Email with QR Code Length:", newBooking.qr_code_data?.length);
+    console.log("QR Code Start:", newBooking.qr_code_data?.substring(0, 50));
+
     await sendBookingConfirmationEmail(user.email, bookingDetails);
 
     res.status(201).json(newBooking);

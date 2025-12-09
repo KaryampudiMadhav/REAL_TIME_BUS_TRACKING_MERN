@@ -66,19 +66,12 @@ const MapComponent = ({ center, buses, route, tripStartTime, className = "" }) =
       routeLayerRef.current.clearLayers();
 
       if (route && route.length > 0) {
-        const latlngs = route.map(stop => [stop.lat, stop.lng]);
-
-        // Draw Polyline
-        const polyline = L.polyline(latlngs, { color: '#3B82F6', weight: 4, opacity: 0.7 }).addTo(routeLayerRef.current);
-
         // Draw Stop Markers
         route.forEach((stop, index) => {
           let popupContent = `<div class="font-semibold">${stop.name}</div>`;
 
-          // Add timing if tripStartTime is available
-          if (tripStartTime && (stop.arrival_offset_mins !== undefined || stop.offset !== undefined)) { // Handle different prop names just in case
-            // Fallback to 0 if undefined, but mainly expect arrival_offset_mins
-            const offset = stop.arrival_offset_mins !== undefined ? stop.arrival_offset_mins : (index * 15); // Rough estimate fallback if data missing
+          if (tripStartTime && (stop.arrival_offset_mins !== undefined || stop.offset !== undefined)) {
+            const offset = stop.arrival_offset_mins !== undefined ? stop.arrival_offset_mins : (index * 15);
             const time = formatTime(tripStartTime, offset);
             popupContent += `<div class="text-xs text-gray-600">Est: ${time}</div>`;
           }
@@ -95,11 +88,52 @@ const MapComponent = ({ center, buses, route, tripStartTime, className = "" }) =
             .addTo(routeLayerRef.current);
         });
 
-        // Auto-fit map to show the entire route
-        const bounds = polyline.getBounds();
-        if (bounds.isValid()) {
-          mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
-        }
+        // FETCH REAL ROAD GEOMETRY FROM OSRM
+        const fetchRoute = async () => {
+          try {
+            // OSRM requires "lng,lat" separated by semicolons
+            const coordinates = route.map(stop => `${stop.lng},${stop.lat}`).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+              const routeGeoJSON = data.routes[0].geometry;
+
+              // Draw the snapped route
+              const polyline = L.geoJSON(routeGeoJSON, {
+                style: {
+                  color: '#3B82F6',
+                  weight: 5,
+                  opacity: 0.8,
+                  lineJoin: 'round'
+                }
+              }).addTo(routeLayerRef.current);
+
+              // Fit bounds
+              const bounds = polyline.getBounds();
+              if (bounds.isValid()) {
+                mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+              }
+
+            } else {
+              throw new Error("OSRM No Route");
+            }
+          } catch (err) {
+            console.warn("OSRM Route Fetch Failed, falling back to straight line:", err);
+            // Fallback: Straight Line
+            const latlngs = route.map(stop => [stop.lat, stop.lng]);
+            const polyline = L.polyline(latlngs, { color: '#3B82F6', weight: 4, opacity: 0.7, dashArray: '10, 10' }).addTo(routeLayerRef.current);
+
+            const bounds = polyline.getBounds();
+            if (bounds.isValid()) {
+              mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+            }
+          }
+        };
+
+        fetchRoute();
       }
     }
   }, [route, tripStartTime]);
