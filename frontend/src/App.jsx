@@ -38,6 +38,18 @@ import { useEffect } from "react";
 import AuthForm from "./pages/passenger/SignUpPage";
 import RequireStaffAuth from "./components/RequireStaffAuth";
 
+import { useLocation } from "react-router-dom";
+
+const ConditionalHeader = () => {
+  const location = useLocation();
+  const hideHeaderRoutes = ["/admin", "/municipal", "/conductor"];
+  const shouldHide = hideHeaderRoutes.some((route) =>
+    location.pathname.startsWith(route)
+  );
+
+  return shouldHide ? null : <Header />;
+};
+
 function App() {
   const { authUser, loading, checkAuth } = useAuthStore();
   const { checkAuth: checkStaffAuth } = useStaffStore();
@@ -54,7 +66,7 @@ function App() {
   return (
     <Router>
       <div className="pt-16 min-h-screen bg-gray-50">
-        <Header />
+        <ConditionalHeader />
         <Routes>
           <Route
             path="/signup"

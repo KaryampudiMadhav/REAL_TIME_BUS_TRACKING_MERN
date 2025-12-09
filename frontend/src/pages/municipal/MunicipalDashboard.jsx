@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Activity, TrendingUp, Users, AlertTriangle, Bus, MapPin, Clock } from "lucide-react";
+import { Activity, TrendingUp, Users, AlertTriangle, Bus, MapPin, Clock, Menu, X, LogOut } from "lucide-react";
 import { axiosInstance } from "../../utils/axiosInstance";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area
@@ -10,6 +10,7 @@ import {
 
 const MunicipalDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     activeBuses: 0,
     totalPassengers: 0,
@@ -160,9 +161,52 @@ const MunicipalDashboard = () => {
                 <Link to="/municipal/dashboard" className="px-4 py-2 bg-orange-50 text-orange-700 rounded-xl font-bold text-sm">Dashboard</Link>
                 <Link to="/municipal/crowd" className="px-4 py-2 text-gray-600 hover:text-orange-600 font-medium text-sm transition-colors">Crowd Monitor</Link>
               </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+            >
+              <div className="px-4 py-4 space-y-2">
+                <Link
+                  to="/municipal/dashboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 bg-orange-50 text-orange-700 rounded-xl font-bold"
+                >
+                  <Activity className="h-5 w-5" />
+                  Dashboard
+                </Link>
+                <Link
+                  to="/municipal/crowd"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl font-medium transition-colors"
+                >
+                  <Users className="h-5 w-5" />
+                  Crowd Monitor
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       <motion.div

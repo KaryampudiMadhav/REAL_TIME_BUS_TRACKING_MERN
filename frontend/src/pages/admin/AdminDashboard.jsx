@@ -11,9 +11,13 @@ import {
   CheckCircle,
   LogOut,
   LayoutDashboard,
+  LogOut,
+  LayoutDashboard,
+  Menu,
+  X,
 } from "lucide-react";
 import MapComponent from "../../components/MapComponent";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { axiosInstance } from "../../utils/axiosInstance";
 import { useStaffStore } from "../../store/useStaffStore";
 
@@ -24,6 +28,7 @@ const AdminDashboard = () => {
   const [staff, setStaff] = useState([]);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Stats State
   const [stats, setStats] = useState({
@@ -161,14 +166,60 @@ const AdminDashboard = () => {
               <div className="h-8 w-px bg-gray-200 hidden md:block" />
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 text-gray-500 hover:text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl transition-all font-semibold"
+                className="hidden md:flex items-center gap-2 text-gray-500 hover:text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl transition-all font-semibold"
               >
                 <LogOut className="h-5 w-5" />
-                <span className="hidden md:inline">Logout</span>
+                <span>Logout</span>
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+            >
+              <div className="px-4 py-4 space-y-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-medium"
+                  >
+                    <link.icon className="h-5 w-5" />
+                    {link.label}
+                  </Link>
+                ))}
+                <div className="h-px bg-gray-100 my-2" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all font-semibold"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Logout
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
