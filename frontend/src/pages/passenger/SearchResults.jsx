@@ -102,7 +102,7 @@ const SearchResults = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {searchParams?.from} → {searchParams?.to}
+                {searchParams?.from} → {searchParams?.to || "Any"}
               </h1>
               <p className="text-gray-600 mt-1">
                 {new Date(searchParams?.date).toLocaleDateString("en-IN", {

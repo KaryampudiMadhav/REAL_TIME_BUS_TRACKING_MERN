@@ -131,8 +131,7 @@ const PassengerDashboard = () => {
                       value={searchForm.to}
                       onChange={(e) => setSearchForm((prev) => ({ ...prev, to: e.target.value }))}
                       className="w-full pl-12 pr-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-900"
-                      placeholder="Destination City"
-                      required
+                      placeholder="Destination City (Optional)"
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <VoiceSearch onResult={handleVoiceResult("to")} />

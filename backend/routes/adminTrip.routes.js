@@ -7,6 +7,10 @@ import {
   updateTripStatus,
   recordOvercrowding,
   getOvercrowdingByDay,
+  updateTripStatus,
+  updateTrip,
+  recordOvercrowding,
+  getOvercrowdingByDay,
 } from "../controllers/trip.controller.js";
 import { getTripLocationHistory } from "../controllers/trip.controller.js";
 import { staffAdmin } from "../middlewares/protectedRoutes.js";
@@ -27,5 +31,6 @@ tripRouter
   .get(staffAdmin, getTripLocationHistory);
 
 tripRouter.route("/:id/status").put(staffAdmin, updateTripStatus);
+tripRouter.route("/:id").put(staffAdmin, updateTrip);
 
 export default tripRouter;

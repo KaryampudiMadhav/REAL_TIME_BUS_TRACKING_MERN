@@ -412,34 +412,46 @@ export const searchAvailableTrips = async (req, res) => {
   try {
     const { from, to, date } = req.query;
 
-    if (!from || !to || !date) {
+    if (!from || !date) {
       return res.status(400).json({
-        message: "Source (from), destination (to), and date are required.",
+        message: "Source (from) and date are required.",
       });
     }
 
-    // --- 1. Find all routes that contain BOTH stops (RegExp match) ---
-    // We fetch checks that 'stops.name' matches both regexes.
-    // Order is NOT guaranteed here, so we must filter in JS.
-    const potentialRoutes = await Route.find({
-      "stops.name": { $all: [new RegExp(from, "i"), new RegExp(to, "i")] }
-    });
+    // --- 1. Find routes matching criteria ---
+    let potentialRoutes = [];
+    let validRouteIds = [];
 
-    if (potentialRoutes.length === 0) {
-      return res.status(200).json([]);
+    if (to && to !== "") {
+      // --- Search specific Source -> Destination ---
+      potentialRoutes = await Route.find({
+        "stops.name": { $all: [new RegExp(from, "i"), new RegExp(to, "i")] },
+      });
+
+      if (potentialRoutes.length > 0) {
+        // Filter routes where 'from' stop comes BEFORE 'to' stop
+        validRouteIds = potentialRoutes
+          .filter((route) => {
+            const fromIndex = route.stops.findIndex((stop) =>
+              new RegExp(from, "i").test(stop.name)
+            );
+            const toIndex = route.stops.findIndex((stop) =>
+              new RegExp(to, "i").test(stop.name)
+            );
+            return fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
+          })
+          .map((route) => route._id);
+      }
+    } else {
+      // --- Search Single Station (Departures or Arrivals involving this stop) ---
+      // We want trips that pass through this station.
+      // Assuming user wants to go FROM this station (Departures).
+      // Find matches for 'from'
+      potentialRoutes = await Route.find({
+        "stops.name": new RegExp(from, "i"),
+      });
+      validRouteIds = potentialRoutes.map((route) => route._id);
     }
-
-    // --- 2. Filter routes where 'from' stop comes BEFORE 'to' stop ---
-    const validRouteIds = potentialRoutes
-      .filter(route => {
-        // Find index of the first stop that matches the 'from' regex
-        const fromIndex = route.stops.findIndex(stop => new RegExp(from, "i").test(stop.name));
-        // Find index of the first stop that matches the 'to' regex
-        const toIndex = route.stops.findIndex(stop => new RegExp(to, "i").test(stop.name));
-
-        return fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
-      })
-      .map(route => route._id);
 
     if (validRouteIds.length === 0) {
       return res.status(200).json([]);
