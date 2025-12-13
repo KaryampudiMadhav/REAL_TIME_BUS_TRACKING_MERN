@@ -407,10 +407,74 @@ export const login = async (req, res) => {
 
 import Route from "../models/route.model.js";
 import Trip from "../models/trip.model.js";
+import Vehicle from "../models/vehicle.model.js";
 
 export const searchAvailableTrips = async (req, res) => {
   try {
-    const { from, to, date } = req.query;
+    const { from, to, date, busNumber, view } = req.query;
+
+    // --- View All Active Buses ---
+    if (view === 'active') {
+      const activeTrips = await Trip.find({
+        status: { $in: ["IN_TRANSIT", "DELAYED"] }
+      })
+        .sort({ updatedAt: -1 })
+        .populate("vehicle_id", "bus_number service_type amenities total_seats")
+        .populate("route_id");
+
+      const enrichedTrips = activeTrips.map(trip => {
+        const tripObj = trip.toObject();
+        const distance = trip.route_id?.distance_km || 0;
+        tripObj.fare = Math.round(distance * 2.5);
+        tripObj.operator = "TSRTC";
+        return tripObj;
+      });
+
+      return res.status(200).json(enrichedTrips);
+    }
+
+    // --- Search by Bus Number (Priority) ---
+    if (busNumber) {
+      const vehicle = await Vehicle.findOne({
+        bus_number: { $regex: new RegExp(busNumber, "i") }
+      });
+
+      if (!vehicle) {
+        return res.status(200).json([]); // Return empty if bus not found
+      }
+
+      const query = {
+        vehicle_id: vehicle._id,
+        status: { $in: ["SCHEDULED", "DELAYED", "IN_TRANSIT"] }
+      };
+
+      if (date) {
+        const searchDate = new Date(date);
+        const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));
+        query.departure_datetime = { $gte: startOfDay, $lte: endOfDay };
+      } else {
+        // If no date, show future trips
+        query.departure_datetime = { $gte: new Date() };
+      }
+
+      const trips = await Trip.find(query)
+        .sort({ departure_datetime: 1 })
+        .populate("vehicle_id", "bus_number service_type amenities total_seats")
+        .populate("route_id");
+
+      // Map to include dynamic fare
+      const enrichedTrips = trips.map(trip => {
+        const tripObj = trip.toObject();
+        const distance = trip.route_id?.distance_km || 0;
+        tripObj.fare = Math.round(distance * 2.5); // 2.5 INR per km
+        tripObj.operator = "TSRTC"; // Can be dynamic later
+        return tripObj;
+      });
+
+      return res.status(200).json(enrichedTrips);
+    }
+
 
     if (!from || !date) {
       return res.status(400).json({
@@ -464,17 +528,23 @@ export const searchAvailableTrips = async (req, res) => {
 
     const availableTrips = await Trip.find({
       route_id: { $in: validRouteIds },
-      status: { $in: ["SCHEDULED", "DELAYED", "IN_TRANSIT"] }, // Include IN_TRANSIT for live tracking? or maybe just SCHEDULED. User wants to book.
-      // Usually only SCHEDULED or DELAYED. IN_TRANSIT might be too late to book online? 
-      // User's screenshot shows "0 buses found" for a future date/today. Best to keep standard statuses.
-      // Although seed has one IN_TRANSIT trip. Let's include it just in case user testing with it.
+      status: { $in: ["SCHEDULED", "DELAYED", "IN_TRANSIT"] },
       departure_datetime: { $gte: startOfDay, $lte: endOfDay },
     })
       .sort({ departure_datetime: 1 })
       .populate("vehicle_id", "bus_number service_type amenities total_seats")
       .populate("route_id");
 
-    res.status(200).json(availableTrips);
+    // Map to include dynamic fare
+    const enrichedTrips = availableTrips.map(trip => {
+      const tripObj = trip.toObject();
+      const distance = trip.route_id?.distance_km || 0;
+      tripObj.fare = Math.round(distance * 2.5); // 2.5 INR per km
+      tripObj.operator = "TSRTC";
+      return tripObj;
+    });
+
+    res.status(200).json(enrichedTrips);
   } catch (error) {
     console.error("Advanced search error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });

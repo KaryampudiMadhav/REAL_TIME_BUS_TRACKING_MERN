@@ -6,12 +6,17 @@ export const useUserStore = create((set) => ({
   loading: false,
   buses: [],
   setBuses: (buses) => set({ buses }),
-  searchBuses: async (src, dest, date) => {
+  searchBuses: async (src, dest, date, busNumber) => {
     set({ loading: true });
     try {
-      const res = await axiosInstance.get(
-        `auth/search?from=${src}&to=${dest}&date=${date}`
-      );
+      let url = `auth/search?date=${date || ''}`;
+      if (busNumber) {
+        url += `&busNumber=${busNumber}`;
+      } else {
+        url += `&from=${src}&to=${dest}`;
+      }
+
+      const res = await axiosInstance.get(url);
       set({ buses: res.data });
     } catch (error) {
       console.log(error);
@@ -27,6 +32,18 @@ export const useUserStore = create((set) => ({
     } catch (error) {
       console.error("Failed to fetch popular routes:", error);
       return [];
+    }
+  },
+  getAllActiveBuses: async () => {
+    set({ loading: true });
+    try {
+      const res = await axiosInstance.get("auth/search?view=active");
+      set({ buses: res.data });
+    } catch (error) {
+      console.error("Failed to fetch active buses:", error);
+      toast.error("Failed to load active buses.");
+    } finally {
+      set({ loading: false });
     }
   },
 }));

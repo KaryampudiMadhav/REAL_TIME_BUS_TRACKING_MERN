@@ -54,17 +54,17 @@ const SearchResults = () => {
     id: trip._id,
     busNumber: trip.vehicle_id?.bus_number || "Unknown",
     serviceType: trip.vehicle_id?.service_type || "Standard",
-    operatorName: "TSRTC", // Hardcoded for now as it's not in trip model explicitly
+    operatorName: trip.operator || "TSRTC",
     departureTime: formatTime(trip.departure_datetime),
     arrivalTime: formatTime(trip.arrival_datetime),
     duration: calculateDuration(trip.departure_datetime, trip.arrival_datetime),
-    price: 500, // TODO: Fetch from route or trip model if available
+    price: trip.fare || 0, // Dynamic fare from backend
     availableSeats: (trip.seat_allocation?.online || 40) - (trip.tickets_booked?.online || 0),
     totalSeats: trip.seat_allocation?.online || 40,
-    amenities: trip.vehicle_id?.amenities || ["Wifi", "Charging Point"],
-    rating: 4.2, // Mock rating
+    amenities: trip.vehicle_id?.amenities?.length > 0 ? trip.vehicle_id.amenities : ["Wifi", "Charging Point", "Water Bottle"], // Fallback if empty but usually populated
+    rating: 4.2, // Mock rating (TODO: Implement Rating model)
     route: trip.route_id?.routeName || "Unknown Route",
-    rawDeparture: trip.departure_datetime // for sorting/filtering
+    rawDeparture: trip.departure_datetime
   }));
 
   const filteredResults = formattedBuses.filter((result) => {

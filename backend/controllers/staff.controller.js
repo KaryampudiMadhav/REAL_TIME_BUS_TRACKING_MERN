@@ -246,7 +246,7 @@ export const createStaff = async (req, res) => {
 
 export const getAllStaff = async (req, res) => {
   try {
-    const staff = await Staff.find({});
+    const staff = await Staff.find({}).populate("user_id");
     res.status(200).json(staff);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

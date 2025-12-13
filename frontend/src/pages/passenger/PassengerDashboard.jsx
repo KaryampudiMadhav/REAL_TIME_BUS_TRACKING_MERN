@@ -19,16 +19,18 @@ import { motion } from "framer-motion";
 
 const PassengerDashboard = () => {
   const navigate = useNavigate();
+  /* State for Tab Selection */
+  const [activeSearchTab, setActiveSearchTab] = useState("route"); // 'route' or 'bus'
+
   const [searchForm, setSearchForm] = useState({
     from: "",
     to: "",
     date: "",
+    busNumber: "" // New field
   });
 
-
-
   const [popularRoutes, setPopularRoutes] = useState([]);
-  const { loading, searchBuses, fetchPopularRoutes } = useUserStore();
+  const { loading, searchBuses, fetchPopularRoutes, getAllActiveBuses } = useUserStore();
 
   // Fetch popular routes on mount
   React.useEffect(() => {
@@ -40,15 +42,16 @@ const PassengerDashboard = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const res = await searchBuses(
-        searchForm.from,
-        searchForm.to,
-        searchForm.date
-      );
-      navigate("/search", { state: searchForm });
+      if (activeSearchTab === "route") {
+        await searchBuses(searchForm.from, searchForm.to, searchForm.date);
+        navigate("/search", { state: searchForm });
+      } else {
+        await searchBuses(null, null, searchForm.date, searchForm.busNumber);
+        navigate("/search", { state: { ...searchForm, mode: 'bus' } });
+      }
     } catch (error) {
       console.log(error);
-      toast.error("Search failed. Please try again.");
+      toast.error(error.response?.data?.message || "Search failed. Check inputs.");
     }
   };
 
@@ -100,44 +103,85 @@ const PassengerDashboard = () => {
           className="glass rounded-3xl p-1 shadow-2xl"
         >
           <div className="bg-white/80 backdrop-blur rounded-[20px] p-6 md:p-8">
+            {/* Search Tabs */}
+            <div className="flex items-center gap-4 mb-6 border-b border-gray-200 pb-2">
+              <button
+                onClick={() => setActiveSearchTab("route")}
+                className={`pb-2 px-4 font-bold text-lg transition-colors relative ${activeSearchTab === "route" ? "text-blue-600" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                Search by Route
+                {activeSearchTab === "route" && <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-600 rounded-t-full" />}
+              </button>
+              <button
+                onClick={() => setActiveSearchTab("bus")}
+                className={`pb-2 px-4 font-bold text-lg transition-colors relative ${activeSearchTab === "bus" ? "text-blue-600" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                Search by Bus Number
+                {activeSearchTab === "bus" && <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-600 rounded-t-full" />}
+              </button>
+            </div>
+
             <form onSubmit={handleSearch}>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                {/* From Input */}
-                <div className="relative group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">From</label>
-                  <div className="relative">
-                    <Navigation className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-500 group-focus-within:scale-110 transition-transform" />
-                    <input
-                      type="text"
-                      value={searchForm.from}
-                      onChange={(e) => setSearchForm((prev) => ({ ...prev, from: e.target.value }))}
-                      className="w-full pl-12 pr-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-900"
-                      placeholder="Departure City"
-                      required
-                    />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                      <VoiceSearch onResult={handleVoiceResult("from")} />
+                {activeSearchTab === "route" ? (
+                  <>
+                    {/* From Input */}
+                    <div className="relative group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">From</label>
+                      <div className="relative">
+                        <Navigation className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-500 group-focus-within:scale-110 transition-transform" />
+                        <input
+                          type="text"
+                          value={searchForm.from}
+                          onChange={(e) => setSearchForm((prev) => ({ ...prev, from: e.target.value }))}
+                          className="w-full pl-12 pr-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-900"
+                          placeholder="Departure City"
+                          required
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <VoiceSearch onResult={handleVoiceResult("from")} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* To Input */}
-                <div className="relative group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">To</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-red-500 group-focus-within:scale-110 transition-transform" />
-                    <input
-                      type="text"
-                      value={searchForm.to}
-                      onChange={(e) => setSearchForm((prev) => ({ ...prev, to: e.target.value }))}
-                      className="w-full pl-12 pr-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-900"
-                      placeholder="Destination City (Optional)"
-                    />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                      <VoiceSearch onResult={handleVoiceResult("to")} />
+                    {/* To Input */}
+                    <div className="relative group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">To</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-red-500 group-focus-within:scale-110 transition-transform" />
+                        <input
+                          type="text"
+                          value={searchForm.to}
+                          onChange={(e) => setSearchForm((prev) => ({ ...prev, to: e.target.value }))}
+                          className="w-full pl-12 pr-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-900"
+                          placeholder="Destination City (Optional)"
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <VoiceSearch onResult={handleVoiceResult("to")} />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* Bus Number Input */
+                  <div className="relative group md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">Bus Number</label>
+                    <div className="relative">
+                      <Bus className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500 group-focus-within:scale-110 transition-transform" />
+                      <input
+                        type="text"
+                        value={searchForm.busNumber}
+                        onChange={(e) => setSearchForm((prev) => ({ ...prev, busNumber: e.target.value }))}
+                        className="w-full pl-12 pr-12 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-green-500 transition-all font-medium text-gray-900 uppercase"
+                        placeholder="e.g. AP21Z1234"
+                        required
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <VoiceSearch onResult={handleVoiceResult("busNumber")} />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Date Input */}
                 <div className="relative group">
@@ -150,7 +194,9 @@ const PassengerDashboard = () => {
                       onChange={(e) => setSearchForm((prev) => ({ ...prev, date: e.target.value }))}
                       className="w-full pl-12 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-900"
                       min={new Date().toISOString().split("T")[0]}
-                      required
+                      // Date optional for bus search? No, keep required for simplicity or make optional.
+                      // Backend handles optional. Let's make it optional for Bus Search, required for Route.
+                      required={activeSearchTab === 'route'}
                     />
                   </div>
                 </div>
@@ -160,10 +206,23 @@ const PassengerDashboard = () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-blue-200 transform transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Search className="h-5 w-5" />
-                  <span>Search</span>
+                  <span>{activeSearchTab === 'route' ? 'Search Buses' : 'Track Bus'}</span>
                 </button>
               </div>
             </form>
+
+            {/* View All Active Buses Link */}
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => {
+                  getAllActiveBuses();
+                  navigate("/search", { state: { title: "Live Active Buses" } });
+                }}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-800 underline"
+              >
+                Don't have specifics? View all active buses
+              </button>
+            </div>
           </div>
         </motion.div>
 

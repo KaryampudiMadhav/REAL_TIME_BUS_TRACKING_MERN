@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Menu,
   X,
+  LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 import MapComponent from "../../components/MapComponent";
 import { motion, AnimatePresence } from "framer-motion";
